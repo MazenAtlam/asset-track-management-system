@@ -11,7 +11,7 @@ on:
       - 'frontend/**'
 
 jobs:
-  build-frontend:
+  build:
     runs-on: ubuntu-latest
     
     # Run all steps inside the frontend directory

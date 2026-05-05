@@ -11,7 +11,7 @@ on:
       - 'backend/**'
 
 jobs:
-  build-backend:
+  build:
     runs-on: ubuntu-latest
     
     # Run all steps inside the backend directory

@@ -5,3 +5,4 @@
 - **Language**: JavaScript
 - **Framework**: React
 - **Routing**: React Router DOM
+- **Package Manager**: npm
