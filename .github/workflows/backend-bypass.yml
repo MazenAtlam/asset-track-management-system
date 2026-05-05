@@ -1,0 +1,14 @@
+name: Backend CI Bypass
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'backend/**' # Triggers ONLY when backend is NOT changed
+
+jobs:
+  build-backend: # This MUST exactly match the required check name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bypass Backend Check
+        run: echo "No backend changes detected. Bypassing check to unblock PR."

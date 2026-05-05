@@ -1,0 +1,14 @@
+name: Frontend CI Bypass
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'frontend/**' # Triggers ONLY when frontend is NOT changed
+
+jobs:
+  build-frontend: # This MUST exactly match the required check name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bypass Frontend Check
+        run: echo "No frontend changes detected. Bypassing check to unblock PR."
