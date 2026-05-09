@@ -31,7 +31,7 @@ function App() {
                 <Route path="assets/new" element={<AssetForm />} />
                 
                 {/* Admin Only Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
                   <Route path="admin/users" element={<UserManagement />} />
                 </Route>
               </Route>

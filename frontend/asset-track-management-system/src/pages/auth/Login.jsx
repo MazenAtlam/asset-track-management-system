@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Box, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-// import apiClient from '../../api/apiClient'; // For real API integration
+import apiClient from '../../api/apiClient';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -36,34 +36,17 @@ const Login = () => {
     }
 
     try {
-      // ** MOCK API CALL **
-      // For real integration: const response = await apiClient.post('/auth/login', { email, password });
-      // const token = response.data.token;
+      const response = await apiClient.post('/auth/login', { email, password });
+      const token = response.data.token;
       
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock validation (accept anything for demonstration, or hardcode valid credentials)
-      if (email === 'manager@assettrack.com' && password === 'password') {
-        // Create a mock JWT for manager
-        // Header: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 (HS256)
-        // Payload: {"sub":"123","email":"manager@assettrack.com","role":"Manager","exp":9999999999} 
-        // Base64 encoded payload: eyJzdWIiOiIxMjMiLCJlbWFpbCI6Im1hbmFnZXJAYXNzZXR0cmFjay5jb20iLCJyb2xlIjoiTWFuYWdlciIsImV4cCI6OTk5OTk5OTk5OX0
-        const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJlbWFpbCI6Im1hbmFnZXJAYXNzZXR0cmFjay5jb20iLCJyb2xlIjoiTWFuYWdlciIsImV4cCI6OTk5OTk5OTk5OX0.signature";
-        
-        login(mockToken);
-        navigate(from, { replace: true });
-      } else if (email === 'admin@assettrack.com' && password === 'password') {
-         // Payload: {"sub":"124","email":"admin@assettrack.com","role":"Admin","exp":9999999999}
-         const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjQiLCJlbWFpbCI6ImFkbWluQGFzc2V0dHJhY2suY29tIiwicm9sZSI6IkFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.signature";
-         login(mockToken);
-         navigate(from, { replace: true });
-      }
-      else {
-        setError('Authentication Failed. The email or password you entered is incorrect. Please try again.');
-      }
+      login(token);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError('An error occurred during login. Please try again.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Authentication Failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

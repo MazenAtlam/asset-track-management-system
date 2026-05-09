@@ -3,8 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Box, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
+import apiClient from '../../api/apiClient';
+
 const SignUp = () => {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,7 +23,7 @@ const SignUp = () => {
     setError('');
     setIsLoading(true);
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       setIsLoading(false);
       return;
@@ -39,21 +42,24 @@ const SignUp = () => {
     }
 
     try {
-      // ** MOCK API CALL **
-      // For real integration: const response = await apiClient.post('/auth/signup', { name, email, password });
+      const response = await apiClient.post('/auth/signup', { 
+        email, 
+        password, 
+        firstName, 
+        lastName 
+      });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Auto-login after sign up for demo purposes
-      // Payload: {"sub":"125","email":email,"role":"Manager","exp":9999999999}
-      // Note: we just use a static mock token for the demo that represents a logged in state
-      const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJlbWFpbCI6Im1hbmFnZXJAYXNzZXR0cmFjay5jb20iLCJyb2xlIjoiTWFuYWdlciIsImV4cCI6OTk5OTk5OTk5OX0.signature";
+      const token = response.data.token;
         
-      login(mockToken);
+      login(token);
       navigate('/dashboard', { replace: true });
       
     } catch (err) {
-      setError('An error occurred during registration. Please try again.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('An error occurred during registration. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -100,22 +106,43 @@ const SignUp = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-on-surface mb-1.5" htmlFor="name">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-outline" />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-on-surface mb-1.5" htmlFor="firstName">
+                  First Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-outline" />
+                  </div>
+                  <input
+                    id="firstName"
+                    type="text"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white text-on-surface transition-colors"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
                 </div>
-                <input
-                  id="name"
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white text-on-surface transition-colors"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-on-surface mb-1.5" htmlFor="lastName">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-outline" />
+                  </div>
+                  <input
+                    id="lastName"
+                    type="text"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white text-on-surface transition-colors"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 

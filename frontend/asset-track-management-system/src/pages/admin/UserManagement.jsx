@@ -7,9 +7,9 @@ const UserManagement = () => {
   
   // Mock data for users
   const [users, setUsers] = useState([
-    { id: 1, name: 'Alice Admin', email: 'admin@assettrack.com', role: 'Admin', status: 'Active' },
-    { id: 2, name: 'Bob Manager', email: 'manager@assettrack.com', role: 'Manager', status: 'Active' },
-    { id: 3, name: 'Charlie Dev', email: 'dev@assettrack.com', role: 'Developer', status: 'Inactive' },
+    { id: 1, name: 'Alice Admin', email: 'admin@assettrack.com', role: 'ADMIN', status: 'Active' },
+    { id: 2, name: 'Bob Manager', email: 'manager@assettrack.com', role: 'MANAGER', status: 'Active' },
+    { id: 3, name: 'Charlie Dev', email: 'dev@assettrack.com', role: 'DEVELOPER', status: 'Inactive' },
   ]);
 
   return (
@@ -56,8 +56,8 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      u.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
-                      u.role === 'Manager' ? 'bg-blue-100 text-blue-800' :
+                      u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                      u.role === 'MANAGER' ? 'bg-blue-100 text-blue-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {u.role}
