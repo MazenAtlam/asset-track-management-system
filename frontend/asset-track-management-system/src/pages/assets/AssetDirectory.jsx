@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../../components/ui/ToastContext';
 import { apiClient } from '../../api/apiClient';
@@ -15,6 +15,10 @@ const AssetDirectory = () => {
   const [filterType, setFilterType] = useState('All Types');
   const [filterStatus, setFilterStatus] = useState('All Statuses');
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -28,10 +32,6 @@ const AssetDirectory = () => {
       clearTimeout(handler);
     };
   }, [searchInputValue, searchTerm]);
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   // Sorting
   const [sortBy, setSortBy] = useState('id');
@@ -69,11 +69,12 @@ const AssetDirectory = () => {
     };
     
     // Reset to page 1 on filter changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(prev => {
       fetchAssets();
       return prev;
     });
-  }, [searchTerm, filterType, filterStatus, currentPage, itemsPerPage, sortBy, sortDirection, warrantyFilter, assignedUserFilter]);
+  }, [searchTerm, filterType, filterStatus, currentPage, itemsPerPage, sortBy, sortDirection, warrantyFilter, assignedUserFilter, toast]);
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -110,7 +111,7 @@ const AssetDirectory = () => {
     }
   };
 
-  const SortIcon = ({ column }) => {
+  const renderSortIcon = (column) => {
     if (sortBy !== column) return <span className="material-symbols-outlined text-[14px] opacity-30">unfold_more</span>;
     return <span className="material-symbols-outlined text-[14px] text-primary">{sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>;
   };
@@ -261,37 +262,37 @@ const AssetDirectory = () => {
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('serialNumber')}
                 >
-                  <div className="flex items-center gap-xs">SERIAL NUMBER <SortIcon column="serialNumber" /></div>
+                  <div className="flex items-center gap-xs">SERIAL NUMBER {renderSortIcon("serialNumber")}</div>
                 </th>
                 <th 
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('type')}
                 >
-                  <div className="flex items-center gap-xs">TYPE <SortIcon column="type" /></div>
+                  <div className="flex items-center gap-xs">TYPE {renderSortIcon("type")}</div>
                 </th>
                 <th 
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('brand')}
                 >
-                  <div className="flex items-center gap-xs">BRAND/MODEL <SortIcon column="brand" /></div>
+                  <div className="flex items-center gap-xs">BRAND/MODEL {renderSortIcon("brand")}</div>
                 </th>
                 <th 
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('assignedUser')}
                 >
-                  <div className="flex items-center gap-xs">OWNER <SortIcon column="assignedUser" /></div>
+                  <div className="flex items-center gap-xs">OWNER {renderSortIcon("assignedUser")}</div>
                 </th>
                 <th 
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('status')}
                 >
-                  <div className="flex items-center gap-xs">STATUS <SortIcon column="status" /></div>
+                  <div className="flex items-center gap-xs">STATUS {renderSortIcon("status")}</div>
                 </th>
                 <th 
                   className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant cursor-pointer hover:bg-surface-container transition-colors group select-none"
                   onClick={() => handleSort('warrantyExpirationDate')}
                 >
-                  <div className="flex items-center gap-xs">WARRANTY <SortIcon column="warrantyExpirationDate" /></div>
+                  <div className="flex items-center gap-xs">WARRANTY {renderSortIcon("warrantyExpirationDate")}</div>
                 </th>
                 <th className="px-lg py-md border-b border-outline-variant font-label-bold text-label-bold text-on-surface-variant">ACTIONS</th>
               </tr>

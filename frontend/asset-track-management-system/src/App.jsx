@@ -7,6 +7,7 @@ import AssetForm from './pages/assets/AssetForm';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import UserManagement from './pages/admin/UserManagement';
+import ReportManagement from './pages/admin/ReportManagement';
 import AssetDetails from './pages/assets/AssetDetails';
 import { ToastProvider } from './components/ui/ToastContext';
 import { AuthProvider } from './context/AuthContext';
@@ -36,6 +37,7 @@ function App() {
                 {/* Admin Only Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
                   <Route path="admin/users" element={<UserManagement />} />
+                  <Route path="admin/reports" element={<ReportManagement />} />
                 </Route>
               </Route>
             </Route>

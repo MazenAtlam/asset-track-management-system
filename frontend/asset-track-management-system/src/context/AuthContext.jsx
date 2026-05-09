@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
@@ -7,6 +7,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
 
   useEffect(() => {
     // Check if user is logged in on initial load
@@ -17,6 +23,7 @@ export const AuthProvider = ({ children }) => {
         // Check if token is expired
         const currentTime = Date.now() / 1000;
         if (decodedUser.exp < currentTime) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           logout();
         } else {
           setToken(storedToken);
@@ -28,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = (newToken) => {
@@ -41,12 +49,6 @@ export const AuthProvider = ({ children }) => {
       console.error("Failed to decode token during login:", error);
       return false;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
   };
 
   const hasRole = (role) => {
@@ -66,6 +68,7 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

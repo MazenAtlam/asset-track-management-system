@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
   const path = location.pathname;
+  const { hasRole } = useAuth();
 
   return (
     <aside className="hidden md:flex flex-col h-screen py-md px-sm gap-xs bg-surface-container-low border-r border-outline-variant w-64 shrink-0">
@@ -41,6 +43,24 @@ const Sidebar = () => {
           <span className="material-symbols-outlined" style={path === '/assets/new' ? { fontVariationSettings: "'FILL' 1" } : {}}>add_box</span>
           <span className="font-label-bold text-label-bold">Add Asset</span>
         </Link>
+        {hasRole('ADMIN') && (
+          <>
+            <Link 
+              to="/admin/users" 
+              className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/users' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+            >
+              <span className="material-symbols-outlined" style={path === '/admin/users' ? { fontVariationSettings: "'FILL' 1" } : {}}>group</span>
+              <span className="font-label-bold text-label-bold">Users</span>
+            </Link>
+            <Link 
+              to="/admin/reports" 
+              className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/reports' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+            >
+              <span className="material-symbols-outlined" style={path === '/admin/reports' ? { fontVariationSettings: "'FILL' 1" } : {}}>report_problem</span>
+              <span className="font-label-bold text-label-bold">Reports</span>
+            </Link>
+          </>
+        )}
       </nav>
 
       <div className="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-md">

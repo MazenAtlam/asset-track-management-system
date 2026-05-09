@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Box, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-import apiClient from '../../api/apiClient';
+import { apiClient } from '../../api/apiClient';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');

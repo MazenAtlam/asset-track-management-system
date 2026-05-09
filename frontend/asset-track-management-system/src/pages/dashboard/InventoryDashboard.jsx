@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useToast } from '../../components/ui/ToastContext';
 import { apiClient } from '../../api/apiClient';
@@ -31,7 +31,7 @@ const InventoryDashboard = () => {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return <div className="p-margin font-body-md text-on-surface-variant flex items-center gap-2"><span className="material-symbols-outlined animate-spin">sync</span> Loading dashboard...</div>;
