@@ -3,12 +3,12 @@ package com.assettrack.security;
 import com.assettrack.domain.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,17 +16,21 @@ import java.util.function.Function;
 
 /**
  * Utility class for generating, parsing, and validating JSON Web Tokens (JWT).
+ *
+ * <p>Uses the jjwt 0.12.x API with HMAC-SHA256 signing.
  */
 @Component
 public class JwtUtil {
 
-    // Ideally, this should be injected from application.properties
-    // Using a strong fallback string for out-of-the-box functionality
-    @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String secretKey;
+    private final SecretKey signingKey;
+    private final long jwtExpiration;
 
-    @Value("${jwt.expiration:86400000}") // Default: 24 hours in milliseconds
-    private long jwtExpiration;
+    public JwtUtil(
+            @Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.expiry-ms:86400000}") long jwtExpiration) {
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.jwtExpiration = jwtExpiration;
+    }
 
     /**
      * Generates a JWT token for the specified user.
@@ -40,11 +44,11 @@ public class JwtUtil {
         claims.put("role", role.name());
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject(email)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(signingKey)
                 .compact();
     }
 
@@ -77,15 +81,10 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(signingKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
-    private Key getSigningKey() {
-        byte[] keyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
