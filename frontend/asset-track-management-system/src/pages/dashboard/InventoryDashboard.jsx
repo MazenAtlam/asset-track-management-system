@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useToast } from '../../components/ui/ToastContext';
 
 // Mock data based on API contract for demonstration if API fails
 const mockDashboardData = {
@@ -26,6 +27,7 @@ const COLORS = {
 const InventoryDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     // Simulate API call to /api/v1/dashboard/summary
@@ -38,9 +40,11 @@ const InventoryDashboard = () => {
           const json = await response.json();
           setData(json);
         } else {
+          toast.warning('Failed to fetch live dashboard data. Showing offline mock data.');
           setData(mockDashboardData);
         }
       } catch (error) {
+        toast.warning('Network error. Showing offline mock data.');
         setData(mockDashboardData);
       } finally {
         setLoading(false);

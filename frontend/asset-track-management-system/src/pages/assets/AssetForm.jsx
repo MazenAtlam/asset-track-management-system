@@ -46,17 +46,13 @@ const AssetForm = () => {
         setSuccess(`Asset created successfully (ID: ${json.assetId})`);
         setTimeout(() => navigate('/assets'), 2000);
       } else {
-        // Mock successful save if backend is down
-        setTimeout(() => {
-          setSuccess('Asset created successfully (Simulated)');
-          setTimeout(() => navigate('/assets'), 2000);
-        }, 1000);
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Failed to register asset. Please check the provided details and try again.');
       }
     } catch (err) {
-      setTimeout(() => {
-        setSuccess('Asset created successfully (Simulated)');
-        setTimeout(() => navigate('/assets'), 2000);
-      }, 1000);
+      setError(err.message || 'Network error: Failed to reach the server. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
