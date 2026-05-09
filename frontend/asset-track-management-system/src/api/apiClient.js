@@ -1,39 +1,48 @@
-import axios from 'axios';
+const API_BASE = '/api/v1';
 
-// Create an Axios instance
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  headers: {
+export const apiClient = {
+  get: async (url, options = {}) => request(url, { ...options, method: 'GET' }),
+  post: async (url, body, options = {}) => request(url, { ...options, method: 'POST', body: JSON.stringify(body) }),
+  put: async (url, body, options = {}) => request(url, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+  delete: async (url, options = {}) => request(url, { ...options, method: 'DELETE' }),
+};
+
+async function request(url, options) {
+  const token = localStorage.getItem('token');
+  const headers = {
     'Content-Type': 'application/json',
-  },
-});
+    ...options.headers,
+  };
 
-// Request interceptor to attach JWT token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
-);
 
-// Response interceptor to handle token expiration or unauthorized errors globally
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Optional: Handle token expiration logic (e.g., redirect to login or refresh token)
-      console.error('Unauthorized! Token may be invalid or expired.');
-      // Avoid redirecting directly from here if you rely on React Context for auth state,
-      // but you can clear localStorage if appropriate.
+  const response = await fetch(`${API_BASE}${url}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorMsg = 'An error occurred';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorData.message || errorMsg;
+    } catch (e) {
+      // Ignored
     }
-    return Promise.reject(error);
+    
+    // Auto logout on 401 or 403
+    if ((response.status === 401 || response.status === 403) && window.location.pathname !== '/login') {
+       localStorage.removeItem('token');
+       localStorage.removeItem('user');
+       window.location.href = '/login';
+    }
+    
+    throw new Error(errorMsg);
   }
-);
 
-export default apiClient;
+  // Handle empty responses (like 204 No Content)
+  const text = await response.text();
+  return text ? JSON.parse(text) : {};
+}

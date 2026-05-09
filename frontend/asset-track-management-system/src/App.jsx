@@ -7,6 +7,7 @@ import AssetForm from './pages/assets/AssetForm';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import UserManagement from './pages/admin/UserManagement';
+import AssetDetails from './pages/assets/AssetDetails';
 import { ToastProvider } from './components/ui/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -29,6 +30,8 @@ function App() {
                 <Route path="dashboard" element={<InventoryDashboard />} />
                 <Route path="assets" element={<AssetDirectory />} />
                 <Route path="assets/new" element={<AssetForm />} />
+                <Route path="assets/:id" element={<AssetDetails />} />
+
                 
                 {/* Admin Only Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
