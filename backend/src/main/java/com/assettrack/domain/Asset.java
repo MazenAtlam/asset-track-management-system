@@ -6,9 +6,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
@@ -97,6 +100,20 @@ public class Asset {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private Status status;
+
+    // ──────────────────────────────────────────────────────────────────────────────
+    // Ownership
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * The user who currently holds this asset.
+     * {@code null} when the asset is AVAILABLE, SPARE, or DECOMMISSIONED.
+     * Set to the assignee when the asset transitions to ASSIGNED, and cleared on return.
+     * LAZY fetch prevents unintended joins on paginated list queries.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_user_id")
+    private User assignedUser;
 
     // ──────────────────────────────────────────────────────────────────────────────
     // Constructors
@@ -201,6 +218,14 @@ public class Asset {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public User getAssignedUser() {
+        return assignedUser;
+    }
+
+    public void setAssignedUser(User assignedUser) {
+        this.assignedUser = assignedUser;
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
