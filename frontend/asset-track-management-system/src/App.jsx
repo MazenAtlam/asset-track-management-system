@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout';
 import InventoryDashboard from './pages/dashboard/InventoryDashboard';
 import AssetDirectory from './pages/assets/AssetDirectory';
 import AssetForm from './pages/assets/AssetForm';
+import AssetDetails from './pages/assets/AssetDetails';
 import { ToastProvider } from './components/ui/ToastContext';
 import './App.css';
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="dashboard" element={<InventoryDashboard />} />
             <Route path="assets" element={<AssetDirectory />} />
             <Route path="assets/new" element={<AssetForm />} />
+            <Route path="assets/:id" element={<AssetDetails />} />
           </Route>
         </Routes>
       </BrowserRouter>

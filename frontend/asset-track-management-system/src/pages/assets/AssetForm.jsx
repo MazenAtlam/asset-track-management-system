@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiClient } from '../../api/apiClient';
 
 const AssetForm = () => {
   const navigate = useNavigate();
@@ -31,26 +32,11 @@ const AssetForm = () => {
     setSuccess('');
 
     try {
-      // Simulate API call to POST /api/v1/assets
-      const response = await fetch('/api/v1/assets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer dummy-token'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        setSuccess(`Asset created successfully (ID: ${json.assetId})`);
-        setTimeout(() => navigate('/assets'), 2000);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        setError(errorData.error || 'Failed to register asset. Please check the provided details and try again.');
-      }
+      const responseData = await apiClient.post('/assets', formData);
+      setSuccess(`Asset created successfully (ID: ${responseData.assetId || 'N/A'})`);
+      setTimeout(() => navigate('/assets'), 2000);
     } catch (err) {
-      setError(err.message || 'Network error: Failed to reach the server. Please try again later.');
+      setError(err.message || 'Failed to register asset. Please check the provided details and try again.');
     } finally {
       setLoading(false);
     }
