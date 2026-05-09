@@ -22,22 +22,10 @@ const UserManagement = () => {
           </h1>
           <p className="text-secondary mt-1">Manage system access and assign roles to team members.</p>
         </div>
-        <button className="bg-primary hover:bg-primary-container text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
-          <UserPlus className="w-5 h-5" />
-          Add User
-        </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
         <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="Search users..." 
-              className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-          </div>
           <div className="text-sm text-secondary">
             Showing <span className="font-medium text-on-surface">{users.length}</span> users
           </div>
@@ -50,7 +38,6 @@ const UserManagement = () => {
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">Role</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -81,14 +68,6 @@ const UserManagement = () => {
                       <div className={`w-2 h-2 rounded-full ${u.status === 'Active' ? 'bg-green-500' : 'bg-outline'}`}></div>
                       <span className="text-sm font-medium">{u.status}</span>
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-outline hover:text-primary transition-colors p-2" title="Edit User">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button className="text-outline hover:text-error transition-colors p-2" title="Remove User">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </td>
                 </tr>
               ))}
