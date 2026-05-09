@@ -1,59 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../../components/ui/ToastContext';
-
-const mockAssetsData = [
-  {
-    id: 101,
-    type: "LAPTOP",
-    brand: "Apple",
-    model: "MacBook Pro 16\" M2",
-    serialNumber: "SN-9421-XB01",
-    status: "ASSIGNED",
-    assignedUser: { id: 1, name: "Sarah Chen" },
-    warrantyExpirationDate: "2025-12-12"
-  },
-  {
-    id: 102,
-    type: "WORKSTATION",
-    brand: "Dell",
-    model: "Precision 7865 Tower",
-    serialNumber: "SN-1023-LT45",
-    status: "AVAILABLE",
-    assignedUser: null,
-    warrantyExpirationDate: "2026-03-05"
-  },
-  {
-    id: 103,
-    type: "NETWORKING",
-    brand: "Cisco",
-    model: "Catalyst 9300 Switch",
-    serialNumber: "SN-5588-NW12",
-    status: "MAINTENANCE",
-    assignedUser: { id: 2, name: "IT Dept." },
-    warrantyExpirationDate: "2023-01-01" 
-  },
-  {
-    id: 104,
-    type: "MONITOR",
-    brand: "Samsung",
-    model: "32\" 4K Smart Monitor",
-    serialNumber: "SN-1102-DS09",
-    status: "ASSIGNED",
-    assignedUser: { id: 3, name: "Maya Patel" },
-    warrantyExpirationDate: "2025-01-20"
-  },
-  {
-    id: 105,
-    type: "LAPTOP",
-    brand: "Apple",
-    model: "MacBook Air M1",
-    serialNumber: "SN-8822-AA11",
-    status: "SPARE",
-    assignedUser: null,
-    warrantyExpirationDate: "2024-11-15"
-  }
-];
+import { apiClient } from '../../api/apiClient';
 
 const AssetDirectory = () => {
   const toast = useToast();
@@ -110,17 +58,11 @@ const AssetDirectory = () => {
         if (warrantyFilter) queryParams.append('warranty', warrantyFilter);
         if (assignedUserFilter) queryParams.append('assignedUser', assignedUserFilter);
         
-        const response = await fetch(`/api/v1/assets?${queryParams.toString()}`);
-        if (response.ok) {
-          const json = await response.json();
-          setData(json);
-        } else {
-          toast.warning('Failed to fetch live data. Showing offline mock data.');
-          simulateBackendData();
-        }
+        const responseData = await apiClient.get(`/assets?${queryParams.toString()}`);
+        setData(responseData);
       } catch (error) {
-        toast.warning('Network error. Showing offline mock data.');
-        simulateBackendData();
+        toast.error(error.message || 'Failed to fetch assets.');
+        setData({ assets: [], totalItems: 0, totalPages: 1, currentPage: 1 });
       } finally {
         setLoading(false);
       }
@@ -133,45 +75,6 @@ const AssetDirectory = () => {
     });
   }, [searchTerm, filterType, filterStatus, currentPage, itemsPerPage, sortBy, sortDirection, warrantyFilter, assignedUserFilter]);
 
-  // Simulate backend filtering, sorting, and pagination so the UI is fully functional offline
-  const simulateBackendData = () => {
-    let filtered = [...mockAssetsData];
-    
-    if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      filtered = filtered.filter(a => a.serialNumber.toLowerCase().includes(lower) || a.model.toLowerCase().includes(lower) || a.brand.toLowerCase().includes(lower));
-    }
-    if (filterType !== 'All Types') filtered = filtered.filter(a => a.type === filterType.toUpperCase());
-    if (filterStatus !== 'All Statuses') filtered = filtered.filter(a => a.status === filterStatus.toUpperCase());
-    
-    if (assignedUserFilter) {
-      filtered = filtered.filter(a => a.assignedUser?.name.toLowerCase().includes(assignedUserFilter.toLowerCase()));
-    }
-    
-    filtered.sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-      if (sortBy === 'assignedUser') {
-        valA = a.assignedUser?.name || '';
-        valB = b.assignedUser?.name || '';
-      }
-      
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-    
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
-    
-    setData({
-      totalItems: filtered.length,
-      totalPages: Math.ceil(filtered.length / itemsPerPage),
-      currentPage,
-      assets: paginated
-    });
-  };
-
   const handleSort = (column) => {
     if (sortBy === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -183,15 +86,10 @@ const AssetDirectory = () => {
 
   const handleFindSpare = async () => {
     try {
-      const response = await fetch('/api/v1/assets/actions/spare-laptop');
-      if (response.ok) {
-        const json = await response.json();
-        toast.success(`Found spare laptop: ${json.brand} ${json.model} (ID: ${json.id})`);
-      } else {
-        toast.info('Found spare laptop: Apple MacBook Air M1 (ID: 105)');
-      }
+      const json = await apiClient.get('/assets/actions/spare-laptop');
+      toast.success(`Found spare laptop: ${json.brand} ${json.model} (ID: ${json.id})`);
     } catch (e) {
-      toast.info('Found spare laptop: Apple MacBook Air M1 (ID: 105)');
+      toast.error(e.message || 'No spare laptops available at the moment.');
     }
   };
 
@@ -436,9 +334,12 @@ const AssetDirectory = () => {
                     {new Date(asset.warrantyExpirationDate) < new Date() ? 'Expired' : new Date(asset.warrantyExpirationDate).toLocaleDateString()}
                   </td>
                   <td className="px-lg py-md">
-                    <button className="text-primary font-label-bold text-label-bold hover:bg-primary/5 px-md py-sm rounded-lg transition-colors">
+                    <Link 
+                      to={`/assets/${asset.id}`}
+                      className="text-primary font-label-bold text-label-bold hover:bg-primary/5 px-md py-sm rounded-lg transition-colors inline-block"
+                    >
                       View Details
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
