@@ -62,9 +62,24 @@ const AssetDirectory = () => {
   const [loading, setLoading] = useState(true);
   
   // Basic Filters
+  const [searchInputValue, setSearchInputValue] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All Types');
   const [filterStatus, setFilterStatus] = useState('All Statuses');
+  
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchTerm !== searchInputValue) {
+        setSearchTerm(searchInputValue);
+        setCurrentPage(1);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInputValue, searchTerm]);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -274,8 +289,8 @@ const AssetDirectory = () => {
                 type="text"
                 placeholder="Search serial, model..."
                 className="pl-8 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-body-md focus:border-primary outline-none"
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                value={searchInputValue}
+                onChange={(e) => setSearchInputValue(e.target.value)}
               />
             </div>
             <button 
