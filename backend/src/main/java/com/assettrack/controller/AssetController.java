@@ -7,6 +7,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,8 +27,14 @@ import com.assettrack.dto.AssetDetailDTO;
 import com.assettrack.dto.AssetListItemDTO;
 import com.assettrack.dto.AssetRequestDTO;
 import com.assettrack.dto.AssetUpdateRequest;
+import com.assettrack.dto.AllocationHistoryDTO;
+import com.assettrack.dto.AllocationRequestDTO;
+import com.assettrack.dto.ConditionReportRequestDTO;
+import com.assettrack.dto.ReturnRequestDTO;
 import com.assettrack.dto.PaginatedResponseDTO;
+import com.assettrack.service.AllocationService;
 import com.assettrack.service.AssetService;
+import com.assettrack.service.ConditionReportService;
 
 import jakarta.validation.Valid;
 
@@ -43,9 +53,15 @@ import jakarta.validation.Valid;
 public class AssetController {
 
     private final AssetService assetService;
+    private final AllocationService allocationService;
+    private final ConditionReportService conditionReportService;
 
-    public AssetController(AssetService assetService) {
+    public AssetController(AssetService assetService,
+                           AllocationService allocationService,
+                           ConditionReportService conditionReportService) {
         this.assetService = assetService;
+        this.allocationService = allocationService;
+        this.conditionReportService = conditionReportService;
     }
 
     /**
@@ -146,5 +162,75 @@ public class AssetController {
         Asset spareLaptop = assetService.findSpareLaptop();
         // Convert to DTO to prevent raw entity leak
         return ResponseEntity.ok(assetService.getAssetById(spareLaptop.getId()));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Condition Reports & Allocation
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Submits a condition report for an asset.
+     */
+    @PostMapping("/{id}/reports")
+    public ResponseEntity<Map<String, Object>> submitConditionReport(
+            @PathVariable Long id,
+            @Valid @RequestBody ConditionReportRequestDTO request) {
+        Long reportId = conditionReportService.submitReport(id, request);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Report submitted successfully");
+        response.put("reportId", reportId);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Allocates an asset to a user.
+     */
+    @PostMapping("/{id}/allocate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Map<String, String>> allocateAsset(
+            @PathVariable Long id,
+            @Valid @RequestBody AllocationRequestDTO request) {
+        allocationService.allocateAsset(id, request);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Asset allocated successfully");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Returns an allocated asset.
+     */
+    @PostMapping("/{id}/return")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Map<String, Object>> returnAsset(
+            @PathVariable Long id,
+            @Valid @RequestBody ReturnRequestDTO request) {
+        Map<String, Object> response = allocationService.returnAsset(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves the paginated allocation history for an asset.
+     */
+    @GetMapping("/{id}/history")
+    public ResponseEntity<PaginatedResponseDTO<AllocationHistoryDTO>> getAssetHistory(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("assignedDate").descending());
+        Page<AllocationHistoryDTO> historyPage = allocationService.getAssetHistory(id, pageable);
+        
+        PaginatedResponseDTO<AllocationHistoryDTO> response = new PaginatedResponseDTO<>(
+                historyPage.getTotalElements(),
+                historyPage.getTotalPages(),
+                page,
+                historyPage.getContent()
+        );
+        
+        return ResponseEntity.ok(response);
     }
 }
