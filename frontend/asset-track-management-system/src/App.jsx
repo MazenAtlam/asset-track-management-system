@@ -9,6 +9,7 @@ import SignUp from './pages/auth/SignUp';
 import UserManagement from './pages/admin/UserManagement';
 import ReportManagement from './pages/admin/ReportManagement';
 import AssetDetails from './pages/assets/AssetDetails';
+import Profile from './pages/profile/Profile';
 import { ToastProvider } from './components/ui/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -30,14 +31,18 @@ function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<InventoryDashboard />} />
                 <Route path="assets" element={<AssetDirectory />} />
-                <Route path="assets/new" element={<AssetForm />} />
                 <Route path="assets/:id" element={<AssetDetails />} />
+                <Route path="profile" element={<Profile />} />
 
+                {/* Admin & Manager Routes */}
+                <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
+                  <Route path="admin/reports" element={<ReportManagement />} />
+                </Route>
                 
                 {/* Admin Only Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                  <Route path="assets/new" element={<AssetForm />} />
                   <Route path="admin/users" element={<UserManagement />} />
-                  <Route path="admin/reports" element={<ReportManagement />} />
                 </Route>
               </Route>
             </Route>

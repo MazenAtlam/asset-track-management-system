@@ -32,8 +32,8 @@ async function request(url, options) {
       // Ignored
     }
     
-    // Auto logout on 401 or 403
-    if ((response.status === 401 || response.status === 403) && window.location.pathname !== '/login') {
+    // Auto logout on 401 (Unauthorized) only. 403 (Forbidden) means they lack permissions, not that their token is invalid.
+    if (response.status === 401 && window.location.pathname !== '/login') {
        localStorage.removeItem('token');
        localStorage.removeItem('user');
        window.location.href = '/login';

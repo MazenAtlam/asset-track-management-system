@@ -37,7 +37,7 @@ const Login = () => {
 
     try {
       const response = await apiClient.post('/auth/login', { email, password });
-      const token = response.data.token;
+      const token = response.token;
       
       login(token);
       navigate(from, { replace: true });

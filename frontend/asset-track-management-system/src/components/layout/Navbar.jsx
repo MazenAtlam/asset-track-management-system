@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiClient } from '../../api/apiClient';
 
@@ -152,9 +152,13 @@ const Navbar = () => {
                 <p className="font-semibold text-sm text-on-surface truncate">{user?.email}</p>
               </div>
               <div className="p-2 flex flex-col">
-                <button className="flex items-center gap-2 px-3 py-2 text-sm text-on-surface hover:bg-surface-container rounded-md w-full text-left transition-colors">
+                <Link 
+                  to="/profile"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-on-surface hover:bg-surface-container rounded-md w-full text-left transition-colors"
+                >
                   <span className="material-symbols-outlined text-[18px]">person</span> Profile
-                </button>
+                </Link>
                 <button 
                   onClick={() => { setShowProfileMenu(false); logout(); }}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-error hover:bg-error/10 rounded-md w-full text-left transition-colors mt-1"

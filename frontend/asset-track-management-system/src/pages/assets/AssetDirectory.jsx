@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../../components/ui/ToastContext';
 import { apiClient } from '../../api/apiClient';
+import { useAuth } from '../../context/AuthContext';
 
 const AssetDirectory = () => {
   const toast = useToast();
+  const { user } = useAuth();
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -138,13 +140,15 @@ const AssetDirectory = () => {
             <span className="material-symbols-outlined">search_check</span>
             Find Spare
           </button>
-          <Link 
-            to="/assets/new"
-            className="flex items-center gap-sm px-lg py-md bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity font-label-bold"
-          >
-            <span className="material-symbols-outlined">add</span>
-            New Asset
-          </Link>
+          {user?.role === 'ADMIN' && (
+            <Link 
+              to="/assets/new"
+              className="flex items-center gap-sm px-lg py-md bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity font-label-bold"
+            >
+              <span className="material-symbols-outlined">add</span>
+              New Asset
+            </Link>
+          )}
         </div>
       </div>
 

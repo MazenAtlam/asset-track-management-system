@@ -49,7 +49,7 @@ const SignUp = () => {
         lastName 
       });
       
-      const token = response.data.token;
+      const token = response.token;
         
       login(token);
       navigate('/dashboard', { replace: true });

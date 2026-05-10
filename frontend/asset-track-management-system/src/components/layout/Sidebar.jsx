@@ -36,41 +36,47 @@ const Sidebar = () => {
           <span className="material-symbols-outlined" style={path === '/assets' ? { fontVariationSettings: "'FILL' 1" } : {}}>inventory_2</span>
           <span className="font-label-bold text-label-bold">Assets</span>
         </Link>
-        <Link 
-          to="/assets/new" 
-          className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/assets/new' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
-        >
-          <span className="material-symbols-outlined" style={path === '/assets/new' ? { fontVariationSettings: "'FILL' 1" } : {}}>add_box</span>
-          <span className="font-label-bold text-label-bold">Add Asset</span>
-        </Link>
         {hasRole('ADMIN') && (
-          <>
-            <Link 
-              to="/admin/users" 
-              className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/users' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
-            >
-              <span className="material-symbols-outlined" style={path === '/admin/users' ? { fontVariationSettings: "'FILL' 1" } : {}}>group</span>
-              <span className="font-label-bold text-label-bold">Users</span>
-            </Link>
-            <Link 
-              to="/admin/reports" 
-              className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/reports' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
-            >
-              <span className="material-symbols-outlined" style={path === '/admin/reports' ? { fontVariationSettings: "'FILL' 1" } : {}}>report_problem</span>
-              <span className="font-label-bold text-label-bold">Reports</span>
-            </Link>
-          </>
+          <Link 
+            to="/assets/new" 
+            className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/assets/new' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+          >
+            <span className="material-symbols-outlined" style={path === '/assets/new' ? { fontVariationSettings: "'FILL' 1" } : {}}>add_box</span>
+            <span className="font-label-bold text-label-bold">Add Asset</span>
+          </Link>
+        )}
+        
+        {(hasRole('ADMIN') || hasRole('MANAGER')) && (
+          <Link 
+            to="/admin/reports" 
+            className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/reports' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+          >
+            <span className="material-symbols-outlined" style={path === '/admin/reports' ? { fontVariationSettings: "'FILL' 1" } : {}}>report_problem</span>
+            <span className="font-label-bold text-label-bold">Reports</span>
+          </Link>
+        )}
+
+        {hasRole('ADMIN') && (
+          <Link 
+            to="/admin/users" 
+            className={`flex items-center gap-md px-md py-sm rounded-lg transition-all ${path === '/admin/users' ? 'bg-secondary-container text-on-secondary-container font-bold scale-[0.98]' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+          >
+            <span className="material-symbols-outlined" style={path === '/admin/users' ? { fontVariationSettings: "'FILL' 1" } : {}}>group</span>
+            <span className="font-label-bold text-label-bold">Users</span>
+          </Link>
         )}
       </nav>
 
       <div className="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-md">
-        <Link 
-          to="/assets/new"
-          className="bg-primary text-on-primary font-label-bold py-md px-lg rounded-lg mb-md flex items-center justify-center gap-sm hover:opacity-90 transition-opacity"
-        >
-          <span className="material-symbols-outlined">add</span>
-          New Asset
-        </Link>
+        {hasRole('ADMIN') && (
+          <Link 
+            to="/assets/new"
+            className="bg-primary text-on-primary font-label-bold py-md px-lg rounded-lg mb-md flex items-center justify-center gap-sm hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">add</span>
+            New Asset
+          </Link>
+        )}
         <a className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
           <span className="material-symbols-outlined">settings</span>
           <span className="font-label-bold text-label-bold">Settings</span>

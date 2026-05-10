@@ -18,12 +18,18 @@ const InventoryDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [summaryData, alertsData] = await Promise.all([
-          apiClient.get('/dashboard/summary'),
-          apiClient.get('/alerts')
-        ]);
+        const summaryData = await apiClient.get('/dashboard/summary');
         setData(summaryData);
-        setAlerts(alertsData.alerts || []);
+
+        try {
+          const alertsData = await apiClient.get('/alerts');
+          setAlerts(alertsData.alerts || []);
+        } catch (alertError) {
+          // If the user is a DEVELOPER, they won't have permission to view alerts (403).
+          // We can gracefully ignore this error so the dashboard still loads.
+          console.warn('Could not fetch alerts:', alertError.message);
+          setAlerts([]);
+        }
       } catch (error) {
         toast.error(error.message || 'Failed to fetch dashboard data.');
       } finally {
