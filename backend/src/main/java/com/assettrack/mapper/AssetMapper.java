@@ -6,6 +6,11 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
+import org.mapstruct.AfterMapping;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.assettrack.domain.Asset;
 import com.assettrack.domain.User;
@@ -65,5 +70,28 @@ public interface AssetMapper {
             return null;
         }
         return new AssetDetailDTO.AssignedUserDTO(user.getId(), user.getFirstName() + " " + user.getLastName());
+    }
+
+    /**
+     * Post-mapping step that fulfills the dynamic expiration tracking requirement
+     * without risking stale database state. It sets the 'expired' flag and
+     * dynamically suggests actions based on the asset's type.
+     */
+    @AfterMapping
+    default void trackExpiration(Asset asset, @MappingTarget AssetDetailDTO dto) {
+        if (asset.getWarrantyExpirationDate() != null && asset.getWarrantyExpirationDate().isBefore(LocalDate.now())) {
+            dto.setExpired(true);
+            List<String> actions = new ArrayList<>();
+            if ("LAPTOP".equalsIgnoreCase(asset.getType())) {
+                actions.add("Reassign as SPARE");
+                actions.add("DECOMMISSION");
+            } else {
+                actions.add("DECOMMISSION");
+            }
+            dto.setSuggestedActions(actions);
+        } else {
+            dto.setExpired(false);
+            dto.setSuggestedActions(new ArrayList<>());
+        }
     }
 }

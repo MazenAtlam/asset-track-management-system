@@ -1,6 +1,7 @@
 package com.assettrack.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Full asset detail response for {@code GET /api/v1/assets/{id}}.
@@ -19,6 +20,9 @@ public class AssetDetailDTO {
 
     /** Currently assigned user, or {@code null} when unassigned. */
     private AssignedUserDTO assignedUser;
+
+    private boolean expired;
+    private List<String> suggestedActions;
 
     // ── Nested DTO ────────────────────────────────────────────────────────────
 
@@ -63,4 +67,10 @@ public class AssetDetailDTO {
 
     public AssignedUserDTO getAssignedUser() { return assignedUser; }
     public void setAssignedUser(AssignedUserDTO assignedUser) { this.assignedUser = assignedUser; }
+
+    public boolean isExpired() { return expired; }
+    public void setExpired(boolean expired) { this.expired = expired; }
+
+    public List<String> getSuggestedActions() { return suggestedActions; }
+    public void setSuggestedActions(List<String> suggestedActions) { this.suggestedActions = suggestedActions; }
 }
