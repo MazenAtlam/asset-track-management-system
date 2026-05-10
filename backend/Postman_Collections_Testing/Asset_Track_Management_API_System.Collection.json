@@ -868,123 +868,7 @@
           "response": []
         },
         {
-          "name": "9. Search Assets (Filtered)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status is 200 OK\", function () {\r",
-                  "    pm.response.to.have.status(200);\r",
-                  "});\r",
-                  "pm.test(\"Returns paginated structure\", function () {\r",
-                  "    var jsonData = pm.response.json();\r",
-                  "    pm.expect(jsonData.totalItems).to.exist;\r",
-                  "    pm.expect(jsonData.assets.length).to.be.greaterThan(0);\r",
-                  "    // Ensure the filter actually worked\r",
-                  "    pm.expect(jsonData.assets[0].status).to.eql(\"SPARE\"); \r",
-                  "});"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/assets?status=SPARE&type=LAPTOP&page=1&size=5",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "assets"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "SPARE"
-                },
-                {
-                  "key": "type",
-                  "value": "LAPTOP"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "size",
-                  "value": "5"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "10. Get Spare Laptop",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status is 200 OK\", function () {\r",
-                  "    pm.response.to.have.status(200);\r",
-                  "});\r",
-                  "pm.test(\"Returns a SPARE laptop\", function () {\r",
-                  "    var jsonData = pm.response.json();\r",
-                  "    pm.expect(jsonData.status).to.eql(\"SPARE\");\r",
-                  "    pm.expect(jsonData.brand).to.eql(\"Apple\"); // From Step 3\r",
-                  "});"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/assets/actions/spare-laptop",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "assets",
-                "actions",
-                "spare-laptop"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "11. List Users",
+          "name": "9. List Users",
           "event": [
             {
               "listen": "test",
@@ -1037,7 +921,322 @@
           "response": []
         },
         {
-          "name": "12. Update User Role",
+          "name": "10. Delete Asset",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 204 No Content\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Get Deleted Asset (Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12A. Create Asset as AVAILABLE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "pm.test(\"Capture Asset ID\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.assetId).to.exist;\r",
+                  "    pm.environment.set(\"asset_id\", jsonData.assetId);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"PHONE\",\r\n  \"brand\": \"Oppo\",\r\n  \"model\": \"F15\",\r\n  \"serialNumber\": \"OP-12345-XPS\",\r\n  \"purchaseDate\": \"2023-01-15\",\r\n  \"warrantyExpirationDate\": \"2026-01-15\",\r\n  \"status\": \"AVAILABLE\",\r\n  \"assignedUserId\": {{user_id}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12B. Allocate Asset for Specific User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 Ok\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": {{user_id}},\r\n    \"allocationDate\": \"2026-05-10\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/allocate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "allocate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12C. Search Assets (Filtered)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test(\"Returns paginated structure\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.totalItems).to.exist;\r",
+                  "    pm.expect(jsonData.assets.length).to.be.greaterThan(0);\r",
+                  "    // Ensure the filter actually worked\r",
+                  "    pm.expect(jsonData.assets[0].status).to.eql(\"ASSIGNED\"); \r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets?status=ASSIGNED&type=PHONE&page=1&size=5&assignedUserId={{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ASSIGNED"
+                },
+                {
+                  "key": "type",
+                  "value": "PHONE"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                },
+                {
+                  "key": "assignedUserId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13. Get Spare Laptop",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test(\"Returns a SPARE laptop\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.status).to.eql(\"SPARE\");\r",
+                  "    pm.expect(jsonData.brand).to.eql(\"Apple\"); // From Step 3\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/actions/spare-laptop",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "actions",
+                "spare-laptop"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14. Update User Role",
           "event": [
             {
               "listen": "test",
@@ -1090,57 +1289,20 @@
           "response": []
         },
         {
-          "name": "13. Delete Asset",
+          "name": "15. Dashboard Summary",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status is 204 No Content\", function () {\r",
-                  "    pm.response.to.have.status(204);\r",
-                  "});"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/assets/{{asset_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "assets",
-                "{{asset_id}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "14. Get Deleted Asset (Fail)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status is 404 Not Found\", function () {\r",
-                  "    pm.response.to.have.status(404);\r",
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response includes categorization by assigned user\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.byAssignedUser).to.exist;\r",
+                  "    pm.expect(jsonData.byAssignedUser).to.be.an('object');\r",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -1163,13 +1325,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "raw": "{{base_url}}/dashboard/summary",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "assets",
-                "{{asset_id}}"
+                "dashboard",
+                "summary"
               ]
             }
           },
