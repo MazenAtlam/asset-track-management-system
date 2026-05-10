@@ -2,6 +2,14 @@
 
 This project is a full-stack application containing a Spring Boot backend and a React (Vite) frontend.
 
+Submitted by Team 2:
+--
+- Anas El-Sheikh
+- Amr Mahmoud
+- Mazen Atlam
+- Mohamed Gad
+- Mohamed Ashraf
+
 ## Prerequisites
 
 - **Java 21**
