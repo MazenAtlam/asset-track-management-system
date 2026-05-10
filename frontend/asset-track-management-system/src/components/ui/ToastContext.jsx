@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const ToastContext = createContext(null);
 
@@ -11,22 +11,24 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      removeToast(id);
-    }, 5000);
-  }, []);
-
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const success = (message) => addToast(message, 'success');
-  const error = (message) => addToast(message, 'error');
-  const warning = (message) => addToast(message, 'warning');
-  const info = (message) => addToast(message, 'info');
+  const addToast = useCallback((message, type = 'info') => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      removeToast(id);
+    }, 5000);
+  }, [removeToast]);
+
+  const success = useCallback((message) => addToast(message, 'success'), [addToast]);
+  const error = useCallback((message) => addToast(message, 'error'), [addToast]);
+  const warning = useCallback((message) => addToast(message, 'warning'), [addToast]);
+  const info = useCallback((message) => addToast(message, 'info'), [addToast]);
+
+  const contextValue = useMemo(() => ({ success, error, warning, info }), [success, error, warning, info]);
 
   const getToastIcon = (type) => {
     switch (type) {
@@ -47,7 +49,7 @@ export const ToastProvider = ({ children }) => {
   };
 
   return (
-    <ToastContext.Provider value={{ success, error, warning, info }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <div className="fixed bottom-lg right-lg z-50 flex flex-col gap-sm pointer-events-none">
         {toasts.map((toast) => (

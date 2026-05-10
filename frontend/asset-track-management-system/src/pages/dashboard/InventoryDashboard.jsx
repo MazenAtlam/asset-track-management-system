@@ -1,22 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useToast } from '../../components/ui/ToastContext';
-
-// Mock data based on API contract for demonstration if API fails
-const mockDashboardData = {
-  totalAssets: 150,
-  byStatus: {
-    AVAILABLE: 20,
-    ASSIGNED: 120,
-    DECOMMISSIONED: 5,
-    SPARE: 5
-  },
-  byType: {
-    LAPTOP: 50,
-    MONITOR: 60,
-    ACCESSORY: 40
-  }
-};
+import { apiClient } from '../../api/apiClient';
 
 const COLORS = {
   LAPTOP: '#003d9b',
@@ -26,35 +11,36 @@ const COLORS = {
 
 const InventoryDashboard = () => {
   const [data, setData] = useState(null);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
-    // Simulate API call to /api/v1/dashboard/summary
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch('/api/v1/dashboard/summary', {
-          headers: { 'Authorization': 'Bearer dummy-token' }
-        });
-        if (response.ok) {
-          const json = await response.json();
-          setData(json);
-        } else {
-          toast.warning('Failed to fetch live dashboard data. Showing offline mock data.');
-          setData(mockDashboardData);
+        const summaryData = await apiClient.get('/dashboard/summary');
+        setData(summaryData);
+
+        try {
+          const alertsData = await apiClient.get('/alerts');
+          setAlerts(alertsData.alerts || []);
+        } catch (alertError) {
+          // If the user is a DEVELOPER, they won't have permission to view alerts (403).
+          // We can gracefully ignore this error so the dashboard still loads.
+          console.warn('Could not fetch alerts:', alertError.message);
+          setAlerts([]);
         }
       } catch (error) {
-        toast.warning('Network error. Showing offline mock data.');
-        setData(mockDashboardData);
+        toast.error(error.message || 'Failed to fetch dashboard data.');
       } finally {
         setLoading(false);
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [toast]);
 
   if (loading) {
-    return <div className="p-margin font-body-md text-on-surface-variant">Loading dashboard...</div>;
+    return <div className="p-margin font-body-md text-on-surface-variant flex items-center gap-2"><span className="material-symbols-outlined animate-spin">sync</span> Loading dashboard...</div>;
   }
 
   const chartData = data ? Object.entries(data.byType).map(([key, value]) => ({
@@ -178,23 +164,24 @@ const InventoryDashboard = () => {
         {/* Recent Alerts */}
         <div className="bg-surface border border-outline-variant rounded-xl p-lg shadow-sm flex flex-col">
           <h3 className="font-h3 text-h3 text-on-surface mb-xl">System Alerts</h3>
-          <div className="flex flex-col gap-md flex-1">
-            <div className="flex gap-md p-md bg-error-container/5 border-l-4 border-error rounded-r-lg">
-              <span className="material-symbols-outlined text-error">history_edu</span>
-              <div>
-                <p className="font-label-bold text-label-bold text-on-surface">Warranty Expiration</p>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mb-xs">Dell XPS 15 warranty expires in 14 days.</p>
-                <span className="text-[10px] font-label-bold text-outline uppercase">2 hours ago</span>
-              </div>
-            </div>
-            <div className="flex gap-md p-md bg-secondary-container/10 border-l-4 border-secondary rounded-r-lg">
-              <span className="material-symbols-outlined text-secondary">package_2</span>
-              <div>
-                <p className="font-label-bold text-label-bold text-on-surface">Low Stock</p>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mb-xs">Mouse inventory has fallen below the threshold of 5.</p>
-                <span className="text-[10px] font-label-bold text-outline uppercase">5 hours ago</span>
-              </div>
-            </div>
+          <div className="flex flex-col gap-md flex-1 overflow-y-auto max-h-[300px]">
+            {alerts.length === 0 ? (
+              <p className="text-on-surface-variant font-body-sm text-center py-md">No active alerts.</p>
+            ) : (
+              alerts.map((alert, idx) => (
+                <div key={alert.alertId || idx} className={`flex gap-md p-md border-l-4 rounded-r-lg ${alert.type === 'WARRANTY_EXPIRING' ? 'bg-error-container/5 border-error' : 'bg-secondary-container/10 border-secondary'}`}>
+                  <span className={`material-symbols-outlined ${alert.type === 'WARRANTY_EXPIRING' ? 'text-error' : 'text-secondary'}`}>
+                    {alert.type === 'WARRANTY_EXPIRING' ? 'history_edu' : 'package_2'}
+                  </span>
+                  <div>
+                    <p className="font-label-bold text-label-bold text-on-surface">
+                      {alert.type.replace('_', ' ')}
+                    </p>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant mb-xs">{alert.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <button className="mt-xl text-primary font-label-bold text-label-bold hover:underline flex items-center justify-center gap-xs">
             View All Alerts <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

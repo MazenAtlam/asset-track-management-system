@@ -36,13 +36,13 @@ export default {
         "on-primary-fixed-variant": "#0040a2",
         "secondary-fixed-dim": "#b9c7e0",
         "primary-fixed": "#dae2ff",
-        "secondary": "#515f74",
+        "secondary": "#334155",
         "on-secondary-container": "#57657b",
         "secondary-container": "#d5e3fd",
         "primary-container": "#0052cc",
         "inverse-on-surface": "#eff1f3",
         "on-secondary-fixed-variant": "#3a485c",
-        "tertiary": "#35445a",
+        "tertiary": "#64748B",
         "on-tertiary": "#ffffff",
         "outline-variant": "#c3c6d6",
         "error-container": "#ffdad6",
@@ -52,9 +52,10 @@ export default {
         "on-error-container": "#93000a",
         "tertiary-fixed-dim": "#b7c8e1",
         "surface-container-low": "#f2f4f6",
-        "primary": "#003d9b",
+        "primary": "#0052cc",
         "tertiary-container": "#4c5c72",
-        "on-surface-variant": "#434654"
+        "on-surface-variant": "#434654",
+        "neutral": "#f8fafc"
       },
       borderRadius: {
         "DEFAULT": "0.25rem",
