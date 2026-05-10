@@ -79,7 +79,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"kamal.Elsayed@example.com\",\r\n  \"password\": \"Kamal123\",\r\n  \"firstName\": \"kamal\",\r\n  \"lastName\": \"Elsayed\"\r\n}",
+              "raw": "{\r\n  \"email\": \"kamal.Elsayed@example.com\",\r\n  \"password\": \"Kamal1234\",\r\n  \"firstName\": \"kamal\",\r\n  \"lastName\": \"Elsayed\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -174,7 +174,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"kamal.Elsayed@example.com\",\r\n  \"password\": \"Kamal123\"\r\n}",
+              "raw": "{\r\n  \"email\": \"kamal.Elsayed@example.com\",\r\n  \"password\": \"Kamal1234\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -337,8 +337,8 @@
                   "});\r",
                   "pm.test(\"Capture Asset ID\", function () {\r",
                   "    var jsonData = pm.response.json();\r",
-                  "    pm.expect(jsonData.id).to.exist;\r",
-                  "    pm.environment.set(\"asset_id\", jsonData.id); // Saves ID for Step 4, 5, 10\r",
+                  "    pm.expect(jsonData.assetId).to.exist;\r",
+                  "    pm.environment.set(\"asset_id\", jsonData.assetId); // Saves ID for Step 4, 5, 10\r",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -427,55 +427,6 @@
               ],
               "path": [
                 "assets"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "0. Admin Login (Success & Capture Token)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200 OK\", function () {\r",
-                  "    pm.response.to.have.status(200);\r",
-                  "});\r",
-                  "\r",
-                  "pm.test(\"Token is received and saved to environment\", function () {\r",
-                  "    var jsonData = pm.response.json();\r",
-                  "    pm.expect(jsonData.token).to.exist;\r",
-                  "    // This line saves the token for future requests\r",
-                  "    pm.environment.set(\"jwt_token\", jsonData.token);\r",
-                  "});"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"email\": \"Mohamed.Gad@example.com\",\r\n  \"password\": \"Gad123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
               ]
             }
           },
@@ -940,6 +891,314 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Phase 5: Global Exception Handling",
+      "item": [
+        {
+          "name": "1. Exception - Validation (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "pm.test(\"Response matches strict error contract\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "    pm.expect(jsonData.message).to.be.undefined; // Ensures old format is gone\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"\", \r\n  \"brand\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Exception - Bad Auth (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "pm.test(\"Response matches strict error contract\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin@assettrack.com\",\r\n  \"password\": \"wrongpassword123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Exception - Not Found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "pm.test(\"Response matches strict error contract\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "    // Verify the message is helpful, e.g., \"Asset not found\"\r",
+                  "    pm.expect(jsonData.error).to.include(\"not found\"); \r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/99999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "99999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Exception - Duplicate (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {\r",
+                  "    pm.response.to.have.status(409);\r",
+                  "});\r",
+                  "pm.test(\"Response matches strict error contract\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"LAPTOP\",\r\n  \"brand\": \"Apple\",\r\n  \"model\": \"MacBook Pro\",\r\n  \"serialNumber\": \"MAC-999-PRO\",\r\n  \"purchaseDate\": \"2024-01-01\",\r\n  \"warrantyExpirationDate\": \"2027-01-01\",\r\n  \"status\": \"SPARE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Exception - Bad Method (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 405 Method Not Allowed\", function () {\r",
+                  "    pm.response.to.have.status(405);\r",
+                  "});\r",
+                  "pm.test(\"Response matches strict error contract\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/actions/spare-laptop",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "actions",
+                "spare-laptop"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "0. Admin Login (Success & Capture Token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Token is received and saved to environment\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.token).to.exist;\r",
+              "    // This line saves the token for future requests\r",
+              "    pm.environment.set(\"jwt_token\", jsonData.token);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"Mostafa.Ashraf@example.com\",\r\n  \"password\": \"Mostafa1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }
