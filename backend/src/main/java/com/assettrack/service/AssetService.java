@@ -73,11 +73,12 @@ public class AssetService {
      * @param status   Filter by exact Status.
      * @param type     Filter by asset type.
      * @param brand    Filter by brand.
+     * @param assignedUserId Filter by assigned user ID.
      * @return A Page of matching AssetListItemDTO.
      */
     @Transactional(readOnly = true)
-    public Page<AssetListItemDTO> getAssets(Pageable pageable, String search, String status, String type, String brand) {
-        return assetRepository.findAll(AssetSpecification.filterAssets(search, status, type, brand), pageable)
+    public Page<AssetListItemDTO> getAssets(Pageable pageable, String search, String status, String type, String brand, Long assignedUserId) {
+        return assetRepository.findAll(AssetSpecification.filterAssets(search, status, type, brand, assignedUserId), pageable)
                 .map(assetMapper::toListItemDto);
     }
 

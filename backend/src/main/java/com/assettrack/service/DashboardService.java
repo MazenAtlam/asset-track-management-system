@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -98,10 +99,19 @@ public class DashboardService {
                     byType.put(type, count);
                 });
 
+        // Count by assigned user
+        Map<String, Long> byAssignedUser = assets.stream()
+                .filter(a -> a.getAssignedUser() != null)
+                .collect(Collectors.groupingBy(
+                        a -> a.getAssignedUser().getFirstName() + " " + a.getAssignedUser().getLastName(),
+                        Collectors.counting()
+                ));
+
         DashboardSummaryDTO dto = new DashboardSummaryDTO();
         dto.setTotalAssets(totalAssets);
         dto.setByStatus(byStatus);
         dto.setByType(byType);
+        dto.setByAssignedUser(byAssignedUser);
         return dto;
     }
 

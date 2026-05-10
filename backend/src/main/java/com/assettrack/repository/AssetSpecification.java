@@ -24,9 +24,10 @@ public class AssetSpecification {
      * @param status The exact status (e.g., AVAILABLE).
      * @param type   The asset type (case-insensitive).
      * @param brand  The asset brand (case-insensitive).
+     * @param assignedUserId The ID of the assigned user.
      * @return Specification to be used with AssetRepository.
      */
-    public static Specification<Asset> filterAssets(String search, String status, String type, String brand) {
+    public static Specification<Asset> filterAssets(String search, String status, String type, String brand, Long assignedUserId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -52,6 +53,10 @@ public class AssetSpecification {
 
             if (brand != null && !brand.trim().isEmpty()) {
                 predicates.add(cb.equal(cb.lower(root.get("brand")), brand.toLowerCase()));
+            }
+
+            if (assignedUserId != null) {
+                predicates.add(cb.equal(root.get("assignedUser").get("id"), assignedUserId));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

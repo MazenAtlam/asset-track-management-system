@@ -23,6 +23,11 @@ public class DashboardSummaryDTO {
      */
     private Map<String, Long> byType;
 
+    /**
+     * Asset counts keyed by assigned user's concatenated name.
+     */
+    private Map<String, Long> byAssignedUser;
+
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
     public long getTotalAssets() { return totalAssets; }
@@ -33,4 +38,7 @@ public class DashboardSummaryDTO {
 
     public Map<String, Long> getByType() { return byType; }
     public void setByType(Map<String, Long> byType) { this.byType = byType; }
+
+    public Map<String, Long> getByAssignedUser() { return byAssignedUser; }
+    public void setByAssignedUser(Map<String, Long> byAssignedUser) { this.byAssignedUser = byAssignedUser; }
 }

@@ -247,6 +247,7 @@ public class Asset {
                 ", purchaseDate=" + purchaseDate +
                 ", warrantyExpirationDate=" + warrantyExpirationDate +
                 ", status=" + status +
+                ", assignedUser=" + (assignedUser != null ? assignedUser.getEmail() : "null") +
                 '}';
     }
 }

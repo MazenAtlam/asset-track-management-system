@@ -95,13 +95,14 @@ public class AssetController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String brand) {
+            @RequestParam(required = false) String brand,
+            @RequestParam(name = "assigned_user_id", required = false) Long assignedUserId) {
 
         // Construct 0-indexed Pageable object for Spring Data
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
         Pageable pageable = PageRequest.of(page - 1, size, sort);
 
-        Page<AssetListItemDTO> assetPage = assetService.getAssets(pageable, search, status, type, brand);
+        Page<AssetListItemDTO> assetPage = assetService.getAssets(pageable, search, status, type, brand, assignedUserId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("totalItems", assetPage.getTotalElements());

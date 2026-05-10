@@ -27,13 +27,14 @@ public interface AssetMapper {
 
     /**
      * Maps an Asset to an AssetListItemDTO.
-     * The nested assignedUser mapping is handled automatically by the custom mapUser methods below.
      */
+    @Mapping(target = "assignedUser", expression = "java(this.toListItemUserDto(asset.getAssignedUser()))")
     AssetListItemDTO toListItemDto(Asset asset);
 
     /**
      * Maps an Asset to an AssetDetailDTO.
      */
+    @Mapping(target = "assignedUser", expression = "java(this.toDetailUserDto(asset.getAssignedUser()))")
     AssetDetailDTO toDetailDto(Asset asset);
 
     /**
@@ -45,16 +46,18 @@ public interface AssetMapper {
 
     /**
      * Updates an existing Asset entity from a partial AssetUpdateRequest.
-     * Null fields in the request will be ignored and will not overwrite existing entity values.
+     * Null fields in the request will be ignored and will not overwrite existing
+     * entity values.
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(AssetUpdateRequest dto, @MappingTarget Asset asset);
 
     /**
-     * Custom mapping from User entity to the nested AssignedUserDTO for the list item.
+     * Custom mapping from User entity to the nested AssignedUserDTO for the list
+     * item.
      * Concatenates firstName and lastName.
      */
-    default AssetListItemDTO.AssignedUserDTO mapUserToListItemAssignedUserDTO(User user) {
+    default AssetListItemDTO.AssignedUserDTO toListItemUserDto(User user) {
         if (user == null) {
             return null;
         }
@@ -62,10 +65,11 @@ public interface AssetMapper {
     }
 
     /**
-     * Custom mapping from User entity to the nested AssignedUserDTO for the detail view.
+     * Custom mapping from User entity to the nested AssignedUserDTO for the detail
+     * view.
      * Concatenates firstName and lastName.
      */
-    default AssetDetailDTO.AssignedUserDTO mapUserToDetailAssignedUserDTO(User user) {
+    default AssetDetailDTO.AssignedUserDTO toDetailUserDto(User user) {
         if (user == null) {
             return null;
         }
