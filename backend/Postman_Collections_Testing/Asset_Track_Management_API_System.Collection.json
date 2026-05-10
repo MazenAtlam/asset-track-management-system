@@ -326,7 +326,56 @@
       "name": "Phase 4: Core Asset CRUD & Advanced Search",
       "item": [
         {
-          "name": "1. Create Asset (Success)",
+          "name": "1. Admin Login (Pre-phase to Capture Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Token is received and saved to environment\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.token).to.exist;\r",
+                  "    // This line saves the token for future requests\r",
+                  "    pm.environment.set(\"jwt_token\", jsonData.token);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"Mostafa.Ashraf@example.com\",\r\n  \"password\": \"Mostafa1234\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Asset (Success)",
           "event": [
             {
               "listen": "test",
@@ -382,7 +431,7 @@
           "response": []
         },
         {
-          "name": "2. Create Asset (Duplicate Serial Fail)",
+          "name": "3. Create Asset (Duplicate Serial Fail)",
           "event": [
             {
               "listen": "test",
@@ -433,7 +482,7 @@
           "response": []
         },
         {
-          "name": "3. Create Spare Asset",
+          "name": "4. Create Spare Asset",
           "event": [
             {
               "listen": "test",
@@ -484,7 +533,7 @@
           "response": []
         },
         {
-          "name": "4. Get Asset Details",
+          "name": "5. Get Asset Details",
           "event": [
             {
               "listen": "test",
@@ -531,7 +580,7 @@
           "response": []
         },
         {
-          "name": "5. Update Asset",
+          "name": "6. Update Asset",
           "event": [
             {
               "listen": "test",
@@ -583,7 +632,243 @@
           "response": []
         },
         {
-          "name": "6. Search Assets (Filtered)",
+          "name": "7A. Set Expired Date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"warrantyExpirationDate\": \"2020-01-01\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7B. Verify Expired State",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Asset is flagged as expired\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.expired).to.be.true;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Suggests SPARE and DECOMMISSION for laptops\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.suggestedActions).to.be.an('array');\r",
+                  "    pm.expect(jsonData.suggestedActions).to.include(\"Reassign as SPARE\");\r",
+                  "    pm.expect(jsonData.suggestedActions).to.include(\"DECOMMISSION\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"warrantyExpirationDate\": \"2020-01-01\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8A. Set Valid Date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"warrantyExpirationDate\": \"2035-01-01\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8B. Verify Valid State",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Asset is no longer expired\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.expired).to.be.false;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Suggested actions array is empty\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.suggestedActions).to.be.an('array').that.is.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"warrantyExpirationDate\": \"2035-01-01\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Search Assets (Filtered)",
           "event": [
             {
               "listen": "test",
@@ -595,9 +880,9 @@
                   "pm.test(\"Returns paginated structure\", function () {\r",
                   "    var jsonData = pm.response.json();\r",
                   "    pm.expect(jsonData.totalItems).to.exist;\r",
-                  "    pm.expect(jsonData.data.length).to.be.greaterThan(0);\r",
+                  "    pm.expect(jsonData.assets.length).to.be.greaterThan(0);\r",
                   "    // Ensure the filter actually worked\r",
-                  "    pm.expect(jsonData.data[0].status).to.eql(\"SPARE\"); \r",
+                  "    pm.expect(jsonData.assets[0].status).to.eql(\"SPARE\"); \r",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -650,7 +935,7 @@
           "response": []
         },
         {
-          "name": "7. Get Spare Laptop",
+          "name": "10. Get Spare Laptop",
           "event": [
             {
               "listen": "test",
@@ -699,7 +984,7 @@
           "response": []
         },
         {
-          "name": "8. List Users",
+          "name": "11. List Users",
           "event": [
             {
               "listen": "test",
@@ -711,11 +996,11 @@
                   "pm.test(\"Capture User ID\", function () {\r",
                   "    var jsonData = pm.response.json();\r",
                   "\r",
-                  "    for (var i = 0; i < jsonData.data.length; i++) {\r",
-                  "        if (jsonData.data[i].role.toLowerCase() === \"admin\") continue;\r",
+                  "    for (var i = 0; i < jsonData.users.length; i++) {\r",
+                  "        if (jsonData.users[i].role.toLowerCase() === \"admin\") continue;\r",
                   "\r",
-                  "        pm.expect(jsonData.data[i].id).to.exist;\r",
-                  "        pm.environment.set(\"user_id\", jsonData.data[i].id);\r",
+                  "        pm.expect(jsonData.users[i].id).to.exist;\r",
+                  "        pm.environment.set(\"user_id\", jsonData.users[i].id);\r",
                   "        break; // Exit loop after first non‑admin user\r",
                   "    }\r",
                   "});"
@@ -752,7 +1037,7 @@
           "response": []
         },
         {
-          "name": "9. Update User Role",
+          "name": "12. Update User Role",
           "event": [
             {
               "listen": "test",
@@ -805,7 +1090,7 @@
           "response": []
         },
         {
-          "name": "10. Delete Asset",
+          "name": "13. Delete Asset",
           "event": [
             {
               "listen": "test",
@@ -848,7 +1133,7 @@
           "response": []
         },
         {
-          "name": "11. Get Deleted Asset (Fail)",
+          "name": "14. Get Deleted Asset (Fail)",
           "event": [
             {
               "listen": "test",
@@ -1152,53 +1437,459 @@
       ]
     },
     {
-      "name": "0. Admin Login (Success & Capture Token)",
-      "event": [
+      "name": "Fix Phase 2: Allocation and Condition Report",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200 OK\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "\r",
-              "pm.test(\"Token is received and saved to environment\", function () {\r",
-              "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData.token).to.exist;\r",
-              "    // This line saves the token for future requests\r",
-              "    pm.environment.set(\"jwt_token\", jsonData.token);\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"email\": \"Mostafa.Ashraf@example.com\",\r\n  \"password\": \"Mostafa1234\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "1. Create Asset (To Capture Id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "pm.test(\"Capture Asset ID\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.assetId).to.exist;\r",
+                  "    pm.environment.set(\"asset_id\", jsonData.assetId); // Saves ID for Step 4, 5, 10\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/login",
-          "host": [
-            "{{base_url}}"
           ],
-          "path": [
-            "auth",
-            "login"
-          ]
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"TV\",\r\n  \"brand\": \"LG\",\r\n  \"model\": \"ZPS 02\",\r\n  \"serialNumber\": \"KL-12345-ZPS\",\r\n  \"purchaseDate\": \"2023-05-14\",\r\n  \"warrantyExpirationDate\": \"2025-05-14\",\r\n  \"status\": \"AVAILABLE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Login (To Capture Developer Id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Capture Developer ID\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.user.id).to.exist;\r",
+                  "    pm.environment.set(\"user_id\", jsonData.user.id);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"kamal.Elsayed@example.com\",\r\n  \"password\": \"Kamal1234\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Submit Condition Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "pm.test(\"Response contains success message and reportId\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.message).to.eql(\"Report submitted successfully\");\r",
+                  "    pm.expect(jsonData.reportId).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"issueType\": \"HARDWARE\",\r\n  \"description\": \"The screen flickers when the lid is adjusted.\",\r\n  \"condition\": \"FAIR\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Allocate Asset (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test(\"Response matches API spec\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.message).to.eql(\"Asset allocated successfully\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"userId\": {{user_id}},\r\n  \"allocationDate\": \"2026-05-10\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/allocate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "allocate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Allocate Asset (Already Assigned Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict (or 400 Bad Request)\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 409]);\r",
+                  "});\r",
+                  "pm.test(\"Response contains strict error structure\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"userId\": {{user_id}},\r\n  \"allocationDate\": \"2026-05-10\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/allocate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "allocate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Return Asset (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test(\"Response contains all spec fields\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.message).to.eql(\"Asset returned successfully\");\r",
+                  "    pm.expect(jsonData.assetId).to.eql(pm.environment.get(\"asset_id\"));\r",
+                  "    pm.expect(jsonData.previousOwnerId).to.eql(pm.environment.get(\"user_id\"));\r",
+                  "    pm.expect(jsonData.currentStatus).to.eql(\"SPARE\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"returnDate\": \"2026-05-15\",\r\n  \"conditionUponReturn\": \"GOOD\",\r\n  \"newStatus\": \"SPARE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/return",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "return"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Asset History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "pm.test(\"History contains the recent allocation cycle\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Check the PaginatedResponse wrapper\r",
+                  "    pm.expect(jsonData.totalItems).to.be.greaterThan(0);\r",
+                  "    pm.expect(jsonData.history).to.exist;\r",
+                  "\r",
+                  "    // Verify the data inside the array\r",
+                  "    let historyRecord = jsonData.history[0];\r",
+                  "    pm.expect(historyRecord.userId).to.eql(pm.environment.get(\"user_id\"));\r",
+                  "    pm.expect(historyRecord.assignedDate).to.eql(\"2026-05-10\");\r",
+                  "    pm.expect(historyRecord.returnedDate).to.eql(\"2026-05-15\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Return Asset (Not Assigned Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict (or 400 Bad Request)\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 409]);\r",
+                  "});\r",
+                  "pm.test(\"Response contains strict error structure\", function () {\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "    pm.expect(jsonData.error).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"returnDate\": \"2026-05-15\",\r\n  \"conditionUponReturn\": \"GOOD\",\r\n  \"newStatus\": \"SPARE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/assets/{{asset_id}}/return",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assets",
+                "{{asset_id}}",
+                "return"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     }
   ]
 }
