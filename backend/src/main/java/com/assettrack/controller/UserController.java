@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.assettrack.domain.Role;
-import com.assettrack.domain.User;
 import com.assettrack.dto.PaginatedResponseDTO;
 import com.assettrack.dto.RoleUpdateRequestDTO;
+import com.assettrack.dto.UserResponseDTO;
 import com.assettrack.service.UserService;
 
 import jakarta.validation.Valid;
@@ -42,7 +42,7 @@ public class UserController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<User>> getUsers(
+    public ResponseEntity<PaginatedResponseDTO<UserResponseDTO>> getUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
@@ -50,9 +50,9 @@ public class UserController {
 
         // Spring Boot uses 0-indexed pages natively, subtract 1 from the request.
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<User> userPage = userService.getUsers(pageable, search, role);
+        Page<UserResponseDTO> userPage = userService.getUsers(pageable, search, role);
 
-        PaginatedResponseDTO<User> response = new PaginatedResponseDTO<>(
+        PaginatedResponseDTO<UserResponseDTO> response = new PaginatedResponseDTO<>(
                 userPage.getTotalElements(),
                 userPage.getTotalPages(),
                 page, // Return the 1-indexed page
@@ -67,11 +67,11 @@ public class UserController {
      */
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> updateUserRole(
+    public ResponseEntity<UserResponseDTO> updateUserRole(
             @PathVariable Long id,
             @Valid @RequestBody RoleUpdateRequestDTO request) {
 
-        User updatedUser = userService.updateUserRole(id, request.getRole());
+        UserResponseDTO updatedUser = userService.updateUserRole(id, request.getRole());
         return ResponseEntity.ok(updatedUser);
     }
 }

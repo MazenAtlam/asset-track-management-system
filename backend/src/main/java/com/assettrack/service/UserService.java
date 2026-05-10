@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.assettrack.domain.Role;
 import com.assettrack.domain.User;
+import com.assettrack.dto.UserResponseDTO;
 import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.repository.UserRepository;
 import com.assettrack.repository.UserSpecification;
@@ -27,31 +28,48 @@ public class UserService {
 
     /**
      * Returns a paginated and optionally filtered list of users.
+     * Maps the User entity to a UserResponseDTO to ensure sensitive information 
+     * like passwords never cross the controller boundary.
      *
      * @param pageable The pagination and sorting context.
-     * @param search   Optional string to match against email, first name, or last
-     *                 name.
+     * @param search   Optional string to match against email, first name, or last name.
      * @param role     Optional Role to filter by.
-     * @return A Page of User entities matching the criteria.
+     * @return A Page of UserResponseDTO matching the criteria.
      */
     @Transactional(readOnly = true)
-    public Page<User> getUsers(Pageable pageable, String search, Role role) {
-        return userRepository.findAll(UserSpecification.filterUsers(search, role), pageable);
+    public Page<UserResponseDTO> getUsers(Pageable pageable, String search, Role role) {
+        return userRepository.findAll(UserSpecification.filterUsers(search, role), pageable)
+                .map(this::mapToUserResponseDTO);
     }
 
     /**
      * Updates the role of an existing user.
+     * Maps the updated User entity to a UserResponseDTO before returning.
      *
      * @param id      The ID of the user to update.
      * @param newRole The new role to assign.
-     * @return The updated User entity.
+     * @return The updated User mapped to UserResponseDTO.
      * @throws ResourceNotFoundException if the user doesn't exist.
      */
-    public User updateUserRole(Long id, Role newRole) {
+    public UserResponseDTO updateUserRole(Long id, Role newRole) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         user.setRole(newRole);
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponseDTO(updatedUser);
+    }
+
+    /**
+     * Helper method to map a User entity to a UserResponseDTO.
+     */
+    private UserResponseDTO mapToUserResponseDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole()
+        );
     }
 }

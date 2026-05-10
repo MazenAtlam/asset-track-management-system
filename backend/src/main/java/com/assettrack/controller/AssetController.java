@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.assettrack.domain.Asset;
+import com.assettrack.dto.AssetConfirmationDTO;
+import com.assettrack.dto.AssetDetailDTO;
+import com.assettrack.dto.AssetListItemDTO;
 import com.assettrack.dto.AssetRequestDTO;
 import com.assettrack.dto.AssetUpdateRequest;
 import com.assettrack.dto.PaginatedResponseDTO;
@@ -47,12 +50,20 @@ public class AssetController {
 
     /**
      * Creates a new asset in the system.
+     * Uses AssetConfirmationDTO instead of a raw Asset entity to provide a lightweight confirmation payload.
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<Asset> createAsset(@Valid @RequestBody AssetRequestDTO request) {
+    public ResponseEntity<AssetConfirmationDTO> createAsset(@Valid @RequestBody AssetRequestDTO request) {
         Asset newAsset = assetService.createAsset(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newAsset);
+        
+        AssetConfirmationDTO response = new AssetConfirmationDTO(
+                "Asset created successfully", 
+                newAsset.getId(), 
+                null // omitted in JSON output due to NON_NULL include rule
+        );
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -60,7 +71,7 @@ public class AssetController {
      * Available to all authenticated users.
      */
     @GetMapping
-    public ResponseEntity<PaginatedResponseDTO<Asset>> getAssets(
+    public ResponseEntity<PaginatedResponseDTO<AssetListItemDTO>> getAssets(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -74,10 +85,10 @@ public class AssetController {
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
         Pageable pageable = PageRequest.of(page - 1, size, sort);
 
-        Page<Asset> assetPage = assetService.getAssets(pageable, search, status, type, brand);
+        Page<AssetListItemDTO> assetPage = assetService.getAssets(pageable, search, status, type, brand);
 
         // Wrap the response in our custom PaginatedResponse using 1-indexed numbering
-        PaginatedResponseDTO<Asset> response = new PaginatedResponseDTO<>(
+        PaginatedResponseDTO<AssetListItemDTO> response = new PaginatedResponseDTO<>(
                 assetPage.getTotalElements(),
                 assetPage.getTotalPages(),
                 page,
@@ -91,21 +102,29 @@ public class AssetController {
      * Available to all authenticated users.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Asset> getAssetById(@PathVariable Long id) {
-        Asset asset = assetService.getAssetById(id);
+    public ResponseEntity<AssetDetailDTO> getAssetById(@PathVariable Long id) {
+        AssetDetailDTO asset = assetService.getAssetById(id);
         return ResponseEntity.ok(asset);
     }
 
     /**
      * Updates an existing asset fully.
+     * Returns a structured AssetConfirmationDTO to avoid leaking full entity structures on update.
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<Asset> updateAsset(
+    public ResponseEntity<AssetConfirmationDTO> updateAsset(
             @PathVariable Long id,
             @RequestBody AssetUpdateRequest request) {
         Asset updatedAsset = assetService.updateAsset(id, request);
-        return ResponseEntity.ok(updatedAsset);
+        
+        AssetConfirmationDTO response = new AssetConfirmationDTO(
+                "Asset updated successfully", 
+                updatedAsset.getId(), 
+                updatedAsset.getStatus() != null ? updatedAsset.getStatus().name() : null
+        );
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -123,8 +142,9 @@ public class AssetController {
      * Available to all authenticated users.
      */
     @GetMapping("/actions/spare-laptop")
-    public ResponseEntity<Asset> findSpareLaptop() {
+    public ResponseEntity<AssetDetailDTO> findSpareLaptop() {
         Asset spareLaptop = assetService.findSpareLaptop();
-        return ResponseEntity.ok(spareLaptop);
+        // Convert to DTO to prevent raw entity leak
+        return ResponseEntity.ok(assetService.getAssetById(spareLaptop.getId()));
     }
 }

@@ -7,6 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.assettrack.domain.Asset;
 import com.assettrack.domain.Status;
+import com.assettrack.domain.User;
+import com.assettrack.dto.AssetDetailDTO;
+import com.assettrack.dto.AssetListItemDTO;
 import com.assettrack.dto.AssetRequestDTO;
 import com.assettrack.dto.AssetUpdateRequest;
 import com.assettrack.exception.ConflictException;
@@ -60,32 +63,42 @@ public class AssetService {
     }
 
     /**
-     * Retrieves a paginated list of assets based on optional search and filter
-     * parameters.
+     * Retrieves a paginated list of assets mapped to AssetListItemDTO.
+     * Prevents raw entities from leaking to the controller.
      *
      * @param pageable The pagination and sorting context.
      * @param search   Global text search (brand, model, serial number).
      * @param status   Filter by exact Status.
      * @param type     Filter by asset type.
      * @param brand    Filter by brand.
-     * @return A Page of matching Asset entities.
+     * @return A Page of matching AssetListItemDTO.
      */
     @Transactional(readOnly = true)
-    public Page<Asset> getAssets(Pageable pageable, String search, String status, String type, String brand) {
-        return assetRepository.findAll(AssetSpecification.filterAssets(search, status, type, brand), pageable);
+    public Page<AssetListItemDTO> getAssets(Pageable pageable, String search, String status, String type, String brand) {
+        return assetRepository.findAll(AssetSpecification.filterAssets(search, status, type, brand), pageable)
+                .map(this::mapToAssetListItemDTO);
     }
 
     /**
-     * Retrieves a single asset by its ID.
+     * Internal method to retrieve the raw Asset entity for updates/deletes.
+     */
+    @Transactional(readOnly = true)
+    public Asset getAssetEntityById(Long id) {
+        return assetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+    }
+
+    /**
+     * Retrieves a single asset by its ID, mapped to AssetDetailDTO.
      *
      * @param id The ID of the asset.
-     * @return The Asset entity.
+     * @return The AssetDetailDTO.
      * @throws ResourceNotFoundException if the asset does not exist.
      */
     @Transactional(readOnly = true)
-    public Asset getAssetById(Long id) {
-        return assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+    public AssetDetailDTO getAssetById(Long id) {
+        Asset asset = getAssetEntityById(id);
+        return mapToAssetDetailDTO(asset);
     }
 
     /**
@@ -96,7 +109,7 @@ public class AssetService {
      * @return The updated Asset entity.
      */
     public Asset updateAsset(Long id, AssetUpdateRequest request) {
-        Asset asset = getAssetById(id);
+        Asset asset = getAssetEntityById(id);
 
         // Partial update logic: we only update fields that are explicitly provided (non-null) 
         // in the request payload. This allows clients to send partial JSON payloads 
@@ -134,7 +147,7 @@ public class AssetService {
      * @throws ConflictException if the asset is currently assigned.
      */
     public void deleteAsset(Long id) {
-        Asset asset = getAssetById(id);
+        Asset asset = getAssetEntityById(id);
 
         if (Status.ASSIGNED.equals(asset.getStatus())) {
             throw new ConflictException("Cannot delete an asset that is currently assigned. Return it first.");
@@ -153,5 +166,55 @@ public class AssetService {
     public Asset findSpareLaptop() {
         return assetRepository.findFirstSpareLaptop()
                 .orElseThrow(() -> new ResourceNotFoundException("No spare laptop is currently available."));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Mappers
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Safely maps an Asset entity to an AssetListItemDTO, explicitly handling
+     * the potentially lazy-loaded assignedUser relationship to prevent issues.
+     */
+    private AssetListItemDTO mapToAssetListItemDTO(Asset asset) {
+        AssetListItemDTO dto = new AssetListItemDTO();
+        dto.setId(asset.getId());
+        dto.setType(asset.getType());
+        dto.setBrand(asset.getBrand());
+        dto.setModel(asset.getModel());
+        dto.setSerialNumber(asset.getSerialNumber());
+        dto.setStatus(asset.getStatus() != null ? asset.getStatus().name() : null);
+
+        if (asset.getAssignedUser() != null) {
+            User user = asset.getAssignedUser();
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            dto.setAssignedUser(new AssetListItemDTO.AssignedUserDTO(user.getId(), fullName));
+        }
+
+        return dto;
+    }
+
+    /**
+     * Safely maps an Asset entity to an AssetDetailDTO, including lifecycle dates
+     * and the explicitly mapped assignedUser.
+     */
+    private AssetDetailDTO mapToAssetDetailDTO(Asset asset) {
+        AssetDetailDTO dto = new AssetDetailDTO();
+        dto.setId(asset.getId());
+        dto.setType(asset.getType());
+        dto.setBrand(asset.getBrand());
+        dto.setModel(asset.getModel());
+        dto.setSerialNumber(asset.getSerialNumber());
+        dto.setPurchaseDate(asset.getPurchaseDate());
+        dto.setWarrantyExpirationDate(asset.getWarrantyExpirationDate());
+        dto.setStatus(asset.getStatus() != null ? asset.getStatus().name() : null);
+
+        if (asset.getAssignedUser() != null) {
+            User user = asset.getAssignedUser();
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            dto.setAssignedUser(new AssetDetailDTO.AssignedUserDTO(user.getId(), fullName));
+        }
+
+        return dto;
     }
 }
