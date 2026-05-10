@@ -20,6 +20,7 @@ import com.assettrack.domain.Asset;
 import com.assettrack.domain.Status;
 import com.assettrack.dto.AlertDTO;
 import com.assettrack.dto.DashboardSummaryDTO;
+import com.assettrack.mapper.AlertMapper;
 import com.assettrack.repository.AlertRepository;
 import com.assettrack.repository.AssetRepository;
 
@@ -43,11 +44,14 @@ public class DashboardService {
 
     private final AssetRepository assetRepository;
     private final AlertRepository alertRepository;
+    private final AlertMapper alertMapper;
 
     public DashboardService(AssetRepository assetRepository,
-                            AlertRepository alertRepository) {
+                            AlertRepository alertRepository,
+                            AlertMapper alertMapper) {
         this.assetRepository = assetRepository;
         this.alertRepository = alertRepository;
+        this.alertMapper = alertMapper;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -126,7 +130,7 @@ public class DashboardService {
             alertPage = alertRepository.findByResolvedFalse(pageable);
         }
 
-        return alertPage.map(this::toAlertDTO);
+        return alertPage.map(alertMapper::toDto);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -150,14 +154,5 @@ public class DashboardService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private AlertDTO toAlertDTO(Alert alert) {
-        AlertDTO dto = new AlertDTO();
-        dto.setAlertId(alert.getId());
-        dto.setType(alert.getType().name());
-        dto.setAssetId(alert.getAssetId());
-        dto.setMessage(alert.getMessage());
-        return dto;
     }
 }

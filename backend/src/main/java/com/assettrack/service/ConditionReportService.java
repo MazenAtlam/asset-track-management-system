@@ -24,6 +24,7 @@ import com.assettrack.domain.Status;
 import com.assettrack.domain.User;
 import com.assettrack.dto.ConditionReportListItemDTO;
 import com.assettrack.dto.ConditionReportRequestDTO;
+import com.assettrack.mapper.ConditionReportMapper;
 import com.assettrack.repository.AssetRepository;
 import com.assettrack.repository.ConditionReportRepository;
 import com.assettrack.repository.UserRepository;
@@ -44,13 +45,16 @@ public class ConditionReportService {
     private final ConditionReportRepository reportRepository;
     private final AssetRepository assetRepository;
     private final UserRepository userRepository;
+    private final ConditionReportMapper conditionReportMapper;
 
     public ConditionReportService(ConditionReportRepository reportRepository,
                                   AssetRepository assetRepository,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository,
+                                  ConditionReportMapper conditionReportMapper) {
         this.reportRepository = reportRepository;
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
+        this.conditionReportMapper = conditionReportMapper;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -76,14 +80,10 @@ public class ConditionReportService {
 
         User reporter = resolveCurrentUser();
 
-        ConditionReport report = new ConditionReport(
-                asset,
-                reporter,
-                IssueType.valueOf(dto.getIssueType().toUpperCase()),
-                dto.getDescription(),
-                AssetCondition.valueOf(dto.getCondition().toUpperCase()),
-                LocalDateTime.now()
-        );
+        ConditionReport report = conditionReportMapper.toEntity(dto);
+        report.setAsset(asset);
+        report.setReporter(reporter);
+        report.setSubmittedAt(LocalDateTime.now());
 
         return reportRepository.save(report).getId();
     }
@@ -112,7 +112,7 @@ public class ConditionReportService {
                 Sort.by("submittedAt").descending());
 
         Specification<ConditionReport> spec = buildReportSpec(status, issueType, assetId);
-        return reportRepository.findAll(spec, pageable).map(this::toListItemDTO);
+        return reportRepository.findAll(spec, pageable).map(conditionReportMapper::toDto);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -153,23 +153,5 @@ public class ConditionReportService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private ConditionReportListItemDTO toListItemDTO(ConditionReport report) {
-        ConditionReportListItemDTO dto = new ConditionReportListItemDTO();
-        dto.setId(report.getId());
-        dto.setAssetId(report.getAsset().getId());
-
-        // Build asset display name: "Brand Model"
-        Asset asset = report.getAsset();
-        dto.setAssetName(asset.getBrand() + " " + asset.getModel());
-
-        User reporter = report.getReporter();
-        dto.setReporterName(reporter.getFirstName() + " " + reporter.getLastName());
-
-        dto.setDescription(report.getDescription());
-        dto.setStatus(report.getStatus().name());
-        dto.setSubmittedAt(report.getSubmittedAt());
-        return dto;
     }
 }

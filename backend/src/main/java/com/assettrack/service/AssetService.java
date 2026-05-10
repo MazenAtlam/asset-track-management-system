@@ -14,6 +14,7 @@ import com.assettrack.dto.AssetRequestDTO;
 import com.assettrack.dto.AssetUpdateRequest;
 import com.assettrack.exception.ConflictException;
 import com.assettrack.exception.ResourceNotFoundException;
+import com.assettrack.mapper.AssetMapper;
 import com.assettrack.repository.AssetRepository;
 import com.assettrack.repository.AssetSpecification;
 
@@ -29,9 +30,11 @@ import com.assettrack.repository.AssetSpecification;
 public class AssetService {
 
     private final AssetRepository assetRepository;
+    private final AssetMapper assetMapper;
 
-    public AssetService(AssetRepository assetRepository) {
+    public AssetService(AssetRepository assetRepository, AssetMapper assetMapper) {
         this.assetRepository = assetRepository;
+        this.assetMapper = assetMapper;
     }
 
     /**
@@ -46,18 +49,12 @@ public class AssetService {
             throw new ConflictException("Serial number '" + request.getSerialNumber() + "' is already registered.");
         }
 
+        Asset asset = assetMapper.toEntity(request);
+
         Status initialStatus = (request.getStatus() != null && !request.getStatus().isBlank())
                 ? Status.valueOf(request.getStatus().toUpperCase())
                 : Status.AVAILABLE;
-
-        Asset asset = new Asset(
-                request.getType(),
-                request.getBrand(),
-                request.getModel(),
-                request.getSerialNumber(),
-                request.getPurchaseDate(),
-                request.getWarrantyExpirationDate(),
-                initialStatus);
+        asset.setStatus(initialStatus);
 
         return assetRepository.save(asset);
     }
@@ -76,7 +73,7 @@ public class AssetService {
     @Transactional(readOnly = true)
     public Page<AssetListItemDTO> getAssets(Pageable pageable, String search, String status, String type, String brand) {
         return assetRepository.findAll(AssetSpecification.filterAssets(search, status, type, brand), pageable)
-                .map(this::mapToAssetListItemDTO);
+                .map(assetMapper::toListItemDto);
     }
 
     /**
@@ -98,7 +95,7 @@ public class AssetService {
     @Transactional(readOnly = true)
     public AssetDetailDTO getAssetById(Long id) {
         Asset asset = getAssetEntityById(id);
-        return mapToAssetDetailDTO(asset);
+        return assetMapper.toDetailDto(asset);
     }
 
     /**
@@ -111,27 +108,7 @@ public class AssetService {
     public Asset updateAsset(Long id, AssetUpdateRequest request) {
         Asset asset = getAssetEntityById(id);
 
-        // Partial update logic: we only update fields that are explicitly provided (non-null) 
-        // in the request payload. This allows clients to send partial JSON payloads 
-        // without inadvertently overwriting existing data with nulls.
-        if (request.getType() != null) {
-            asset.setType(request.getType());
-        }
-        if (request.getBrand() != null) {
-            asset.setBrand(request.getBrand());
-        }
-        if (request.getModel() != null) {
-            asset.setModel(request.getModel());
-        }
-        if (request.getSerialNumber() != null) {
-            asset.setSerialNumber(request.getSerialNumber());
-        }
-        if (request.getPurchaseDate() != null) {
-            asset.setPurchaseDate(request.getPurchaseDate());
-        }
-        if (request.getWarrantyExpirationDate() != null) {
-            asset.setWarrantyExpirationDate(request.getWarrantyExpirationDate());
-        }
+        assetMapper.updateEntityFromDto(request, asset);
 
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             asset.setStatus(Status.valueOf(request.getStatus().toUpperCase()));
@@ -168,53 +145,4 @@ public class AssetService {
                 .orElseThrow(() -> new ResourceNotFoundException("No spare laptop is currently available."));
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Mappers
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Safely maps an Asset entity to an AssetListItemDTO, explicitly handling
-     * the potentially lazy-loaded assignedUser relationship to prevent issues.
-     */
-    private AssetListItemDTO mapToAssetListItemDTO(Asset asset) {
-        AssetListItemDTO dto = new AssetListItemDTO();
-        dto.setId(asset.getId());
-        dto.setType(asset.getType());
-        dto.setBrand(asset.getBrand());
-        dto.setModel(asset.getModel());
-        dto.setSerialNumber(asset.getSerialNumber());
-        dto.setStatus(asset.getStatus() != null ? asset.getStatus().name() : null);
-
-        if (asset.getAssignedUser() != null) {
-            User user = asset.getAssignedUser();
-            String fullName = user.getFirstName() + " " + user.getLastName();
-            dto.setAssignedUser(new AssetListItemDTO.AssignedUserDTO(user.getId(), fullName));
-        }
-
-        return dto;
-    }
-
-    /**
-     * Safely maps an Asset entity to an AssetDetailDTO, including lifecycle dates
-     * and the explicitly mapped assignedUser.
-     */
-    private AssetDetailDTO mapToAssetDetailDTO(Asset asset) {
-        AssetDetailDTO dto = new AssetDetailDTO();
-        dto.setId(asset.getId());
-        dto.setType(asset.getType());
-        dto.setBrand(asset.getBrand());
-        dto.setModel(asset.getModel());
-        dto.setSerialNumber(asset.getSerialNumber());
-        dto.setPurchaseDate(asset.getPurchaseDate());
-        dto.setWarrantyExpirationDate(asset.getWarrantyExpirationDate());
-        dto.setStatus(asset.getStatus() != null ? asset.getStatus().name() : null);
-
-        if (asset.getAssignedUser() != null) {
-            User user = asset.getAssignedUser();
-            String fullName = user.getFirstName() + " " + user.getLastName();
-            dto.setAssignedUser(new AssetDetailDTO.AssignedUserDTO(user.getId(), fullName));
-        }
-
-        return dto;
-    }
 }

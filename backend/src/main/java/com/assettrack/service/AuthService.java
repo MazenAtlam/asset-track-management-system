@@ -5,6 +5,7 @@ import com.assettrack.domain.User;
 import com.assettrack.dto.AuthResponseDTO;
 import com.assettrack.dto.LoginRequestDTO;
 import com.assettrack.dto.SignupRequestDTO;
+import com.assettrack.mapper.UserMapper;
 import com.assettrack.repository.UserRepository;
 import com.assettrack.security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,15 +24,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     public AuthService(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil,
-            AuthenticationManager authenticationManager) {
+            AuthenticationManager authenticationManager,
+            UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -46,14 +50,10 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already registered.");
         }
 
-        // Create new user entity, encoding password immediately
-        User newUser = new User(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName(),
-                request.getLastName(),
-                Role.DEVELOPER // Default role for new signups
-        );
+        // Map from DTO and manually inject secure fields
+        User newUser = userMapper.toEntity(request);
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setRole(Role.DEVELOPER); // Default role for new signups
 
         User savedUser = userRepository.save(newUser);
         return savedUser.getId();

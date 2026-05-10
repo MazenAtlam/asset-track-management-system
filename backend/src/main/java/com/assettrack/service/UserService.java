@@ -9,6 +9,7 @@ import com.assettrack.domain.Role;
 import com.assettrack.domain.User;
 import com.assettrack.dto.UserResponseDTO;
 import com.assettrack.exception.ResourceNotFoundException;
+import com.assettrack.mapper.UserMapper;
 import com.assettrack.repository.UserRepository;
 import com.assettrack.repository.UserSpecification;
 
@@ -21,9 +22,11 @@ import com.assettrack.repository.UserSpecification;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -39,7 +42,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> getUsers(Pageable pageable, String search, Role role) {
         return userRepository.findAll(UserSpecification.filterUsers(search, role), pageable)
-                .map(this::mapToUserResponseDTO);
+                .map(userMapper::toDto);
     }
 
     /**
@@ -57,19 +60,6 @@ public class UserService {
 
         user.setRole(newRole);
         User updatedUser = userRepository.save(user);
-        return mapToUserResponseDTO(updatedUser);
-    }
-
-    /**
-     * Helper method to map a User entity to a UserResponseDTO.
-     */
-    private UserResponseDTO mapToUserResponseDTO(User user) {
-        return new UserResponseDTO(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getRole()
-        );
+        return userMapper.toDto(updatedUser);
     }
 }
