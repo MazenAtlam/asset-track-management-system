@@ -31,7 +31,7 @@ import com.assettrack.dto.AllocationHistoryDTO;
 import com.assettrack.dto.AllocationRequestDTO;
 import com.assettrack.dto.ConditionReportRequestDTO;
 import com.assettrack.dto.ReturnRequestDTO;
-import com.assettrack.dto.PaginatedResponseDTO;
+import com.assettrack.dto.SpareLaptopDTO;
 import com.assettrack.service.AllocationService;
 import com.assettrack.service.AssetService;
 import com.assettrack.service.ConditionReportService;
@@ -87,7 +87,7 @@ public class AssetController {
      * Available to all authenticated users.
      */
     @GetMapping
-    public ResponseEntity<PaginatedResponseDTO<AssetListItemDTO>> getAssets(
+    public ResponseEntity<Map<String, Object>> getAssets(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -103,12 +103,11 @@ public class AssetController {
 
         Page<AssetListItemDTO> assetPage = assetService.getAssets(pageable, search, status, type, brand);
 
-        // Wrap the response in our custom PaginatedResponse using 1-indexed numbering
-        PaginatedResponseDTO<AssetListItemDTO> response = new PaginatedResponseDTO<>(
-                assetPage.getTotalElements(),
-                assetPage.getTotalPages(),
-                page,
-                assetPage.getContent());
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalItems", assetPage.getTotalElements());
+        response.put("totalPages", assetPage.getTotalPages());
+        response.put("currentPage", page);
+        response.put("assets", assetPage.getContent());
 
         return ResponseEntity.ok(response);
     }
@@ -158,10 +157,9 @@ public class AssetController {
      * Available to all authenticated users.
      */
     @GetMapping("/actions/spare-laptop")
-    public ResponseEntity<AssetDetailDTO> findSpareLaptop() {
-        Asset spareLaptop = assetService.findSpareLaptop();
-        // Convert to DTO to prevent raw entity leak
-        return ResponseEntity.ok(assetService.getAssetById(spareLaptop.getId()));
+    public ResponseEntity<SpareLaptopDTO> findSpareLaptop() {
+        SpareLaptopDTO spareLaptop = assetService.findSpareLaptop();
+        return ResponseEntity.ok(spareLaptop);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -216,7 +214,7 @@ public class AssetController {
      * Retrieves the paginated allocation history for an asset.
      */
     @GetMapping("/{id}/history")
-    public ResponseEntity<PaginatedResponseDTO<AllocationHistoryDTO>> getAssetHistory(
+    public ResponseEntity<Map<String, Object>> getAssetHistory(
             @PathVariable Long id,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -224,12 +222,11 @@ public class AssetController {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("assignedDate").descending());
         Page<AllocationHistoryDTO> historyPage = allocationService.getAssetHistory(id, pageable);
         
-        PaginatedResponseDTO<AllocationHistoryDTO> response = new PaginatedResponseDTO<>(
-                historyPage.getTotalElements(),
-                historyPage.getTotalPages(),
-                page,
-                historyPage.getContent()
-        );
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalItems", historyPage.getTotalElements());
+        response.put("totalPages", historyPage.getTotalPages());
+        response.put("currentPage", page);
+        response.put("history", historyPage.getContent());
         
         return ResponseEntity.ok(response);
     }

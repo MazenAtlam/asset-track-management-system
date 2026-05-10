@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.assettrack.domain.AllocationHistory;
 import com.assettrack.domain.Asset;
 import com.assettrack.domain.Status;
 import com.assettrack.domain.User;
@@ -12,11 +13,13 @@ import com.assettrack.dto.AssetDetailDTO;
 import com.assettrack.dto.AssetListItemDTO;
 import com.assettrack.dto.AssetRequestDTO;
 import com.assettrack.dto.AssetUpdateRequest;
+import com.assettrack.dto.SpareLaptopDTO;
 import com.assettrack.exception.ConflictException;
 import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.mapper.AssetMapper;
 import com.assettrack.repository.AssetRepository;
 import com.assettrack.repository.AssetSpecification;
+import com.assettrack.repository.HistoryRepository;
 
 /**
  * Business logic layer for Core Asset Operations.
@@ -31,10 +34,12 @@ public class AssetService {
 
     private final AssetRepository assetRepository;
     private final AssetMapper assetMapper;
+    private final HistoryRepository historyRepository;
 
-    public AssetService(AssetRepository assetRepository, AssetMapper assetMapper) {
+    public AssetService(AssetRepository assetRepository, AssetMapper assetMapper, HistoryRepository historyRepository) {
         this.assetRepository = assetRepository;
         this.assetMapper = assetMapper;
+        this.historyRepository = historyRepository;
     }
 
     /**
@@ -136,13 +141,33 @@ public class AssetService {
     /**
      * Finds the first available spare laptop.
      *
-     * @return The spare laptop Asset entity.
+     * @return The spare laptop wrapped in a SpareLaptopDTO.
      * @throws ResourceNotFoundException if none is available.
      */
     @Transactional(readOnly = true)
-    public Asset findSpareLaptop() {
-        return assetRepository.findFirstSpareLaptop()
+    public SpareLaptopDTO findSpareLaptop() {
+        Asset asset = assetRepository.findFirstSpareLaptop()
                 .orElseThrow(() -> new ResourceNotFoundException("No spare laptop is currently available."));
+
+        SpareLaptopDTO dto = new SpareLaptopDTO();
+        dto.setId(asset.getId());
+        dto.setBrand(asset.getBrand());
+        dto.setModel(asset.getModel());
+        dto.setStatus(asset.getStatus().name());
+
+        // Find the last person who held this laptop to populate lastOwner.
+        // We query the history repository directly and extract the User if a record exists.
+        historyRepository.findFirstByAssetIdOrderByReturnedDateDesc(asset.getId())
+                .ifPresent(history -> {
+                    User user = history.getUser();
+                    if (user != null) {
+                        dto.setLastOwner(new SpareLaptopDTO.LastOwnerDTO(
+                                user.getId(), 
+                                user.getFirstName() + " " + user.getLastName()));
+                    }
+                });
+
+        return dto;
     }
 
 }

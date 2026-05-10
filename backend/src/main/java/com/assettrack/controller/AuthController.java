@@ -36,11 +36,11 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequestDTO request) {
         try {
-            Long userId = authService.registerUser(request);
+            String token = authService.registerUser(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of(
-                            "message", "User registered successfully.",
-                            "userId", userId));
+                            "message", "User registered successfully",
+                            "token", token));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", ex.getMessage()));

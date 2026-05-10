@@ -45,7 +45,7 @@ public class AuthService {
      * @return the ID of the newly created user.
      * @throws IllegalArgumentException if the email is already in use.
      */
-    public Long registerUser(SignupRequestDTO request) {
+    public String registerUser(SignupRequestDTO request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already registered.");
         }
@@ -56,7 +56,7 @@ public class AuthService {
         newUser.setRole(Role.DEVELOPER); // Default role for new signups
 
         User savedUser = userRepository.save(newUser);
-        return savedUser.getId();
+        return jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole());
     }
 
     /**

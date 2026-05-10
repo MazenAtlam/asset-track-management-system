@@ -37,4 +37,11 @@ public interface HistoryRepository extends JpaRepository<AllocationHistory, Long
      * @return an Optional containing the open history record, or empty if not currently allocated
      */
     Optional<AllocationHistory> findFirstByAssetIdAndReturnedDateIsNull(Long assetId);
+
+    /**
+     * Finds the most recent allocation history record for a given asset,
+     * ordering by returnedDate descending to get the last known owner.
+     * Used by the "Spare Laptop" logic to fetch the last person who held it.
+     */
+    Optional<AllocationHistory> findFirstByAssetIdOrderByReturnedDateDesc(Long assetId);
 }

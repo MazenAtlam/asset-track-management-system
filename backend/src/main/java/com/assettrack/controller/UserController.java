@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.assettrack.domain.Role;
-import com.assettrack.dto.PaginatedResponseDTO;
 import com.assettrack.dto.RoleUpdateRequestDTO;
 import com.assettrack.dto.UserResponseDTO;
 import com.assettrack.service.UserService;
@@ -42,7 +41,7 @@ public class UserController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<UserResponseDTO>> getUsers(
+    public ResponseEntity<java.util.Map<String, Object>> getUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
@@ -52,11 +51,11 @@ public class UserController {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<UserResponseDTO> userPage = userService.getUsers(pageable, search, role);
 
-        PaginatedResponseDTO<UserResponseDTO> response = new PaginatedResponseDTO<>(
-                userPage.getTotalElements(),
-                userPage.getTotalPages(),
-                page, // Return the 1-indexed page
-                userPage.getContent());
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("totalItems", userPage.getTotalElements());
+        response.put("totalPages", userPage.getTotalPages());
+        response.put("currentPage", page);
+        response.put("users", userPage.getContent());
 
         return ResponseEntity.ok(response);
     }
@@ -67,11 +66,17 @@ public class UserController {
      */
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDTO> updateUserRole(
+    public ResponseEntity<java.util.Map<String, Object>> updateUserRole(
             @PathVariable Long id,
             @Valid @RequestBody RoleUpdateRequestDTO request) {
 
         UserResponseDTO updatedUser = userService.updateUserRole(id, request.getRole());
-        return ResponseEntity.ok(updatedUser);
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("message", "User role updated successfully");
+        response.put("userId", updatedUser.getId());
+        response.put("newRole", updatedUser.getRole().name());
+
+        return ResponseEntity.ok(response);
     }
 }
